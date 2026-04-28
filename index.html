@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Equipment Borrowing & Monitoring System – Barangay Camp Tinio</title>
-<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap)" rel="stylesheet">
 
 <!-- Firebase SDKs -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { initializeApp } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js)";
   import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js)";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js)";
 
   // ─── 🔥 FIREBASE CONFIG — Replace with your own project config ───
   const firebaseConfig = {
@@ -152,7 +152,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: v
 .fb-banner.offline .fb-dot { background:#ccc; animation:none; }
 
 .header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%); color: #fff; position: relative; overflow: hidden; }
-.header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+.header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='[w3.org](http://www.w3.org/2000/svg)'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
 .header-top { display: flex; align-items: center; gap: 20px; padding: 18px 32px; position: relative; }
 .header-seal { width: 72px; height: 72px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; border: 3px solid var(--gold); box-shadow: 0 0 0 4px rgba(200,168,75,0.2); }
 .header-title h1 { font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 0.5px; line-height: 1.2; }
@@ -170,12 +170,17 @@ nav button.active { color: #fff; border-bottom-color: var(--gold); }
 .page.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* HOME */
-.hero { background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%); padding: 40px 32px 36px; border-bottom: 1px solid var(--border); }
+/* HOME - UPDATED FOR CENTERING */
+.hero { 
+  background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%); 
+  padding: 40px 32px 36px; 
+  border-bottom: 1px solid var(--border); 
+  text-align: center; 
+}
 .hero h2 { font-family: 'Merriweather', serif; font-size: 1.35rem; color: var(--navy); margin-bottom: 8px; }
 .hero h2 span { color: var(--navy-mid); }
 .hero p { color: var(--text-muted); font-size: 1rem; margin-bottom: 28px; }
-.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 6px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; letter-spacing: 0.3px; }
 .btn-green { background: var(--green-light); color: #fff; }
 .btn-green:hover { background: var(--green); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(46,125,50,0.3); }
@@ -392,7 +397,7 @@ footer span { color: var(--gold); }
       <p>Barangay Camp Tinio &nbsp;•&nbsp; Powered by Firebase</p>
     </div>
   </div>
-  <svg class="header-mountain" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" fill="white">
+  <svg class="header-mountain" viewBox="0 0 400 80" xmlns="[w3.org](http://www.w3.org/2000/svg)" fill="white">
     <path d="M0,80 L80,20 L140,50 L200,5 L260,45 L320,25 L400,60 L400,80 Z"/>
   </svg>
 </header>
