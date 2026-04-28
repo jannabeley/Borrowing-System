@@ -5,6 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Equipment Borrowing & Monitoring System – Barangay Camp Tinio</title>
 <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // ─── 🔥 FIREBASE CONFIG — Replace with your own project config ───
+  const firebaseConfig = {
+    apiKey: "AIzaSyAObpO8dltnKAeEdTdRzy89S8il311QDCY",
+    authDomain: "barangay-system-c2de8.firebaseapp.com",
+    projectId: "barangay-system-c2de8",
+    storageBucket: "barangay-system-c2de8.firebasestorage.app",
+    messagingSenderId: "590794764667",
+    appId: "1:590794764667:web:ef968fc79c7fec65a54dde",
+    measurementId: "G-R3RDGSV19D"
+  };
+  // ────────────────────────────────────────────────────────────────
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Expose to global scope so non-module scripts can use them
+  window.__db   = db;
+  window.__auth = auth;
+
+  window.__fb = {
+    collection, addDoc, getDocs, doc, updateDoc, onSnapshot,
+    query, orderBy, serverTimestamp, setDoc, getDoc,
+    signInWithEmailAndPassword, signOut, onAuthStateChanged
+  };
+
+  // ─── AUTH STATE LISTENER ─────────────────────────────────────
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      window.__isLoggedIn = true;
+      showAdmin();
+      showToast('✅ Welcome back, Admin!');
+    } else {
+      window.__isLoggedIn = false;
+    }
+  });
+
+  // ─── SEED DEFAULT ITEMS if collection is empty ────────────────
+  async function seedItems() {
+    const snap = await getDocs(collection(db, 'items'));
+    if (snap.empty) {
+      const defaults = [
+        { name:'Monoblock Chairs',  icon:'🪑', total:520, inUse:0, lost:0 },
+        { name:'Collapsible Tents', icon:'⛺', total:6,   inUse:0, lost:0 },
+        { name:'Wooden Tables',     icon:'🪵', total:16,  inUse:0, lost:0 },
+      ];
+      for (const it of defaults) {
+        await addDoc(collection(db, 'items'), it);
+      }
+    }
+  }
+  seedItems();
+
+  // ─── REAL-TIME LISTENERS ──────────────────────────────────────
+  const reqQ = query(collection(db, 'requests'), orderBy('createdAt','desc'));
+  onSnapshot(reqQ, snap => {
+    window.__requests = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    refreshAllViews();
+  });
+
+  onSnapshot(collection(db, 'items'), snap => {
+    window.__items = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    refreshAllViews();
+  });
+
+  // ─── GLOBAL API ───────────────────────────────────────────────
+  window.__firestore = {
+
+    async addRequest(data) {
+      return await addDoc(collection(db, 'requests'), {
+        ...data,
+        status: 'Pending',
+        lostNote: '',
+        returnedNote: '',
+        createdAt: serverTimestamp()
+      });
+    },
+
+    async updateRequest(id, data) {
+      return await updateDoc(doc(db, 'requests', id), data);
+    },
+
+    async updateItem(id, data) {
+      return await updateDoc(doc(db, 'items', id), data);
+    },
+
+    async addItem(data) {
+      return await addDoc(collection(db, 'items'), { ...data, inUse:0, lost:0 });
+    },
+
+    async login(email, password) {
+      return await signInWithEmailAndPassword(auth, email, password);
+    },
+
+    async logout() {
+      return await signOut(auth);
+    }
+  };
+
+  console.log('🔥 Firebase initialized');
+</script>
+
 <style>
 :root {
   --navy: #1a3a6b;
@@ -32,6 +143,13 @@
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── FIREBASE BANNER ── */
+.fb-banner { background: linear-gradient(90deg, #1a3a6b 0%, #ff6f00 100%); color:#fff; text-align:center; padding:6px 12px; font-size:0.78rem; font-weight:700; letter-spacing:0.5px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.fb-banner .fb-dot { width:8px; height:8px; border-radius:50%; background:#ffca28; display:inline-block; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);} }
+.fb-banner.offline { background:linear-gradient(90deg,#555,#888); }
+.fb-banner.offline .fb-dot { background:#ccc; animation:none; }
 
 .header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%); color: #fff; position: relative; overflow: hidden; }
 .header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
@@ -100,7 +218,6 @@ tr:hover td { background: #f5f8fc; }
 .link-btn { background: none; border: none; color: var(--navy-mid); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: background 0.15s; }
 .link-btn:hover { background: #e8edf5; }
 
-/* CENTERED PAGES */
 .centered-page { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
 
 /* BORROW FORM */
@@ -124,10 +241,8 @@ tr:hover td { background: #f5f8fc; }
 .inv-page-card { background: var(--surface); border-radius: 12px; padding: 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); margin-bottom: 24px; }
 .inv-page-card h2 { font-family: 'Merriweather', serif; font-size: 1.25rem; color: var(--navy); margin-bottom: 8px; }
 .inv-page-card .form-desc { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-
 .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
 @media (max-width: 600px) { .inv-grid { grid-template-columns: 1fr; } }
-
 .inv-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 16px; text-align: center; transition: box-shadow 0.2s; }
 .inv-card:hover { box-shadow: var(--shadow); }
 .inv-card .ic-icon { font-size: 2.4rem; margin-bottom: 8px; }
@@ -142,17 +257,14 @@ tr:hover td { background: #f5f8fc; }
 .ic-divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
 .ic-avail-big { font-family: 'Merriweather', serif; font-size: 2rem; font-weight: 900; color: var(--navy); }
 .ic-avail-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
 .avail-bar-wrap { margin-top: 10px; }
 .avail-bar-bg { background: var(--border); border-radius: 100px; height: 6px; overflow: hidden; }
 .avail-bar-fill { height: 100%; border-radius: 100px; transition: width 0.4s; }
-
 .search-box { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
 .search-box input { flex: 1; border: 1.5px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 0.95rem; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.2s; }
 .search-box input:focus { border-color: var(--navy-mid); background: #fff; }
 .search-box button { background: var(--navy-mid); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-family: 'Source Sans 3', sans-serif; font-size: 0.93rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
 .search-box button:hover { background: var(--navy); }
-
 .inv-detail-result { display: none; background: var(--approved-bg); border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 18px 20px; margin-top: 4px; }
 .inv-detail-result.show { display: block; animation: fadeIn 0.3s ease; }
 .inv-detail-result h4 { color: var(--approved); font-family: 'Merriweather', serif; font-size: 1rem; margin-bottom: 10px; }
@@ -162,13 +274,15 @@ tr:hover td { background: #f5f8fc; }
 .inv-detail-row .dv { font-weight: 700; color: #1b5e20; }
 
 /* LOGIN */
-.login-page { max-width: 400px; margin: 0 auto; width: 100%; }
+.login-page { max-width: 420px; margin: 0 auto; width: 100%; }
 .login-card { background: var(--surface); border-radius: 12px; padding: 40px 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); text-align: center; }
 .login-card h2 { font-family: 'Merriweather', serif; font-size: 1.4rem; color: var(--navy); margin-bottom: 8px; }
 .login-card .login-desc { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 28px; }
 .login-card .form-group { text-align: left; }
 .login-error { display: none; background: #fce4ec; color: #b71c1c; border: 1.5px solid #f48fb1; border-radius: 6px; padding: 12px; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; }
 .login-error.show { display: block; }
+.login-note { background: #e3f2fd; border: 1.5px solid #90caf9; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 0.82rem; color: #0d47a1; text-align: left; }
+.login-note strong { display: block; margin-bottom: 4px; }
 
 /* ADMIN */
 .admin-nav { background: var(--navy-dark); display: flex; align-items: center; padding: 0 24px; overflow-x: auto; flex-wrap: nowrap; }
@@ -206,8 +320,6 @@ tr:hover td { background: #f5f8fc; }
 .qa-blue:hover { background: var(--navy); }
 .qa-teal { background: var(--teal); color: #fff; }
 .qa-teal:hover { background: #006064; }
-.qa-orange { background: var(--orange); color: #fff; }
-.qa-orange:hover { background: #bf360c; }
 
 .inv-table .available { color: var(--green-light); font-weight: 700; }
 .inv-table .in-use { color: var(--navy-mid); font-weight: 700; }
@@ -227,14 +339,10 @@ tr:hover td { background: #f5f8fc; }
 .modal h3 { font-family: 'Merriweather', serif; font-size: 1.15rem; color: var(--navy); margin-bottom: 8px; }
 .modal p { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 20px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-danger:hover { background: #8b0000; }
 
-/* SMS notice box */
 .sms-notice { background: #e3f2fd; border: 1.5px solid #90caf9; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.88rem; color: #0d47a1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .sms-notice a { color: #0d47a1; font-weight: 700; }
 
-/* Lost/Damaged check in return modal */
 .lost-check-group { background: #fff3e0; border: 1.5px solid #ffcc02; border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
 .lost-check-group label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 700; color: #bf360c; cursor: pointer; }
 .lost-check-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
@@ -245,18 +353,43 @@ tr:hover td { background: #f5f8fc; }
 .toast.show { display: block; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 
+/* LOADING OVERLAY */
+.loading-overlay { position: fixed; inset:0; background:rgba(15,35,71,0.85); z-index:3000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+.loading-overlay.show { display:flex; }
+.spinner { width:44px; height:44px; border:4px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { color:#fff; font-size:0.95rem; font-weight:600; }
+
 footer { background: var(--navy-dark); color: #8899aa; font-size: 0.82rem; text-align: center; padding: 16px 32px; margin-top: 40px; }
 footer span { color: var(--gold); }
+
+/* Firebase config setup screen */
+.setup-screen { padding:32px; max-width:700px; margin:0 auto; }
+.setup-screen h2 { font-family:'Merriweather',serif; color:var(--navy); font-size:1.3rem; margin-bottom:8px; }
+.setup-screen p { color:var(--text-muted); margin-bottom:20px; font-size:0.95rem; }
+.setup-steps { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+.setup-step { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 20px; }
+.setup-step .step-num { background:var(--navy-mid); color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.82rem; font-weight:700; margin-right:8px; }
+.setup-step p { margin:6px 0 0 32px; font-size:0.88rem; color:var(--text-muted); }
+.code-block { background:#1e1e2e; color:#cdd6f4; border-radius:8px; padding:16px 20px; font-family:monospace; font-size:0.83rem; overflow-x:auto; margin:12px 0; }
+.code-block .key { color:#89b4fa; }
+.code-block .val { color:#a6e3a1; }
 </style>
 </head>
 <body>
+
+<!-- Firebase status banner -->
+<div class="fb-banner offline" id="fb-banner">
+  <span class="fb-dot"></span>
+  <span id="fb-status-text">🔥 Firebase — Not Connected &nbsp;|&nbsp; Configure your project below</span>
+</div>
 
 <header class="header">
   <div class="header-top">
     <div class="header-seal">🏛️</div>
     <div class="header-title">
       <h1>EQUIPMENT BORROWING AND MONITORING SYSTEM</h1>
-      <p>Barangay Camp Tinio</p>
+      <p>Barangay Camp Tinio &nbsp;•&nbsp; Powered by Firebase</p>
     </div>
   </div>
   <svg class="header-mountain" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" fill="white">
@@ -264,7 +397,7 @@ footer span { color: var(--gold); }
   </svg>
 </header>
 
-<!-- PUBLIC NAV (Reports removed) -->
+<!-- PUBLIC NAV -->
 <nav id="public-nav">
   <button class="active" onclick="showPage('home', this)">Home</button>
   <button onclick="showPage('borrow', this)">Request Equipment</button>
@@ -283,15 +416,17 @@ footer span { color: var(--gold); }
   <button onclick="showAdminPage('a-items', this)">Items</button>
   <button onclick="showAdminPage('a-inventory', this)">Inventory</button>
   <div class="nav-spacer"></div>
-  <span class="admin-user">👤 Admin ▾</span>
+  <span class="admin-user" id="admin-email-display">👤 Admin</span>
   <button class="nav-admin-btn" onclick="logoutAdmin()" style="margin-left:12px;">🚪 Logout</button>
 </nav>
 
-<!-- HOME -->
+<!-- ═══════════════════════════════════════════════════
+     HOME PAGE
+═══════════════════════════════════════════════════ -->
 <div class="page active" id="page-home">
   <div class="hero">
     <h2>Welcome to <span>Barangay Camp Tinio</span> Equipment Borrowing System.</h2>
-    <p>Request and monitor equipment easily!</p>
+    <p>Request and monitor equipment easily! All data is stored in real-time via Firebase.</p>
     <div class="hero-btns">
       <button class="btn btn-green" onclick="navTo('borrow')">🪑 Borrow Equipment ›</button>
       <button class="btn btn-navy" onclick="navTo('inventory')">📦 Check Inventory ›</button>
@@ -300,10 +435,10 @@ footer span { color: var(--gold); }
   <div class="cards-grid">
     <div class="card">
       <h3>🏷️ Available Items</h3>
-      <div class="inv-items">
-        <div class="inv-item"><div class="icon">🪑</div><div class="count" id="pub-chairs">508</div><div class="label">Chairs</div></div>
-        <div class="inv-item"><div class="icon">⛺</div><div class="count" id="pub-tents">4</div><div class="label">Tents</div></div>
-        <div class="inv-item"><div class="icon">🪵</div><div class="count" id="pub-tables">12</div><div class="label">Tables</div></div>
+      <div class="inv-items" id="home-inv-items">
+        <div class="inv-item"><div class="icon">🪑</div><div class="count" id="pub-chairs">—</div><div class="label">Chairs</div></div>
+        <div class="inv-item"><div class="icon">⛺</div><div class="count" id="pub-tents">—</div><div class="label">Tents</div></div>
+        <div class="inv-item"><div class="icon">🪵</div><div class="count" id="pub-tables">—</div><div class="label">Tables</div></div>
       </div>
     </div>
     <div class="card">
@@ -319,32 +454,45 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- LOGIN PAGE -->
+<!-- ═══════════════════════════════════════════════════
+     LOGIN PAGE
+═══════════════════════════════════════════════════ -->
 <div class="page" id="page-login">
   <div class="centered-page">
     <div class="login-page">
       <div class="login-card">
         <h2>🔐 Admin Login</h2>
-        <p class="login-desc">Enter your credentials to access the admin panel.</p>
-        <div class="login-error" id="login-error">Invalid username or password.</div>
+        <p class="login-desc">Enter your Firebase Authentication credentials.</p>
+        <div class="login-error" id="login-error">Invalid email or password.</div>
         <div class="form-group">
-          <label>Username</label>
-          <input type="text" id="login-user" placeholder="Enter username">
+          <label>Email</label>
+          <input type="email" id="login-user" placeholder="admin@camptinio.gov.ph">
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input type="password" id="login-pass" placeholder="Enter password" onkeypress="if(event.key==='Enter')attemptLogin()">
+          <input type="password" id="login-pass" placeholder="Your password" onkeypress="if(event.key==='Enter')attemptLogin()">
         </div>
         <div class="form-submit" style="margin-top:20px;">
-          <button class="btn btn-navy" style="width:100%;justify-content:center;" onclick="attemptLogin()">🔓 Login</button>
+          <button class="btn btn-navy" style="width:100%;justify-content:center;" onclick="attemptLogin()">🔓 Login with Firebase</button>
         </div>
-        <p style="margin-top:20px;font-size:0.85rem;color:var(--text-muted);"><a href="#" onclick="showPage('home', document.querySelector('#public-nav button'))">← Back to Public Site</a></p>
+        <div class="login-note">
+          <strong>🔥 Firebase Auth Setup Required</strong>
+          1. Go to Firebase Console → Authentication → Sign-in method<br>
+          2. Enable <strong>Email/Password</strong> provider<br>
+          3. Add an admin user under <strong>Users</strong> tab<br>
+          4. Use that email &amp; password here
+        </div>
+        <p style="margin-top:16px;font-size:0.85rem;color:var(--text-muted);">
+          <a href="#" onclick="showPage('home', document.querySelector('#public-nav button'))">← Back to Public Site</a>
+        </p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- BORROW FORM — centered & fit to screen -->
+<!-- ═══════════════════════════════════════════════════
+     BORROW FORM
+═══════════════════════════════════════════════════ -->
 <div class="page" id="page-borrow">
   <div class="centered-page">
     <div class="form-card">
@@ -373,30 +521,30 @@ footer span { color: var(--gold); }
       </div>
       <div class="form-group"><label>Valid ID Number</label><input type="text" id="f-id" placeholder="e.g. PWD ID, Voter's ID"></div>
       <div class="form-submit">
-        <button class="btn btn-green" onclick="submitRequest()">✔ Submit Request</button>
+        <button class="btn btn-green" onclick="submitRequest()">✔ Submit Request to Firebase</button>
       </div>
       <div class="success-msg" id="borrow-success">
-        ✅ Your request has been submitted! Your Request ID is <strong id="req-id-out"></strong>. You may check the inventory status under the "Check Inventory" page.
+        ✅ Your request has been saved to Firebase! Your Request ID is <strong id="req-id-out"></strong>. Check status under "Check Inventory".
       </div>
     </div>
   </div>
 </div>
 
-<!-- CHECK INVENTORY — centered & fit to screen -->
+<!-- ═══════════════════════════════════════════════════
+     CHECK INVENTORY
+═══════════════════════════════════════════════════ -->
 <div class="page" id="page-inventory">
   <div class="inventory-centered">
     <div class="inventory-inner">
-
       <div class="inv-page-card">
         <h2>📦 Check Inventory</h2>
-        <p class="form-desc">See real-time availability of all barangay equipment. Search for a specific item or browse the full inventory below.</p>
+        <p class="form-desc">Real-time availability synced from Firebase. Search or browse below.</p>
         <div class="search-box">
           <input type="text" id="inv-search" placeholder="Search item (e.g. Chairs, Tents, Tables…)" oninput="searchInventory()">
           <button onclick="searchInventory()">🔍 Search</button>
         </div>
         <div class="inv-detail-result" id="inv-search-result"></div>
       </div>
-
       <div class="inv-page-card">
         <h2 style="font-size:1.05rem;margin-bottom:16px;">All Equipment</h2>
         <div class="inv-grid" id="inv-cards-grid"></div>
@@ -412,7 +560,6 @@ footer span { color: var(--gold); }
           </div>
         </div>
       </div>
-
       <div class="card">
         <h3 style="font-size:1rem;color:var(--navy);margin-bottom:14px;">📄 All Borrowing Requests</h3>
         <div style="overflow-x:auto;">
@@ -422,41 +569,37 @@ footer span { color: var(--gold); }
           </table>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
-<!-- ADMIN DASHBOARD -->
+<!-- ═══════════════════════════════════════════════════
+     ADMIN DASHBOARD
+═══════════════════════════════════════════════════ -->
 <div class="page" id="page-dashboard">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Dashboard</h2>
     <div class="stat-cards">
       <div class="stat-card sc-blue" onclick="showAdminPage('a-pending', document.querySelector('#admin-nav button:nth-child(2)'))">
-        <div class="sc-icon">📋</div><div class="sc-num" id="dash-pending">5</div><div class="sc-label">Pending Requests</div>
+        <div class="sc-icon">📋</div><div class="sc-num" id="dash-pending">—</div><div class="sc-label">Pending Requests</div>
       </div>
       <div class="stat-card sc-green" onclick="showAdminPage('a-approved', document.querySelector('#admin-nav button:nth-child(3)'))">
-        <div class="sc-icon">✅</div><div class="sc-num" id="dash-approved">20</div><div class="sc-label">Approved Requests</div>
+        <div class="sc-icon">✅</div><div class="sc-num" id="dash-approved">—</div><div class="sc-label">Approved Requests</div>
       </div>
       <div class="stat-card sc-orange" onclick="showAdminPage('a-returned', document.querySelector('#admin-nav button:nth-child(4)'))">
-        <div class="sc-icon">📦</div><div class="sc-num" id="dash-returned">12</div><div class="sc-label">Returned Items</div>
+        <div class="sc-icon">📦</div><div class="sc-num" id="dash-returned">—</div><div class="sc-label">Returned Items</div>
       </div>
       <div class="stat-card sc-red" onclick="showAdminPage('a-lost', document.querySelector('#admin-nav button:nth-child(5)'))">
-        <div class="sc-icon">⚠️</div><div class="sc-num" id="dash-lost">4</div><div class="sc-label">Lost/Damaged</div>
+        <div class="sc-icon">⚠️</div><div class="sc-num" id="dash-lost">—</div><div class="sc-label">Lost/Damaged</div>
       </div>
     </div>
     <div class="admin-grid">
       <div>
-        <div class="card">
-          <div class="card-header"><h3>Equipment Inventory</h3></div>
-          <div class="inv-items">
-            <div class="inv-item"><div class="icon">🪑</div><div class="count">520</div><div class="label">Chairs</div></div>
-            <div class="inv-item"><div class="icon">⛺</div><div class="count">6</div><div class="label">Tents</div></div>
-            <div class="inv-item"><div class="icon">🪵</div><div class="count">16</div><div class="label">Tables</div></div>
-            <div class="inv-item"><div class="icon">⚠️</div><div class="count">7</div><div class="label">Lost/Dmgd</div></div>
-          </div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><h3>Equipment Inventory (Live)</h3></div>
+          <div class="inv-items" id="dash-inv-items">Loading…</div>
         </div>
-        <div class="card" style="margin-top:20px;">
+        <div class="card">
           <div class="card-header"><h3>Recent Requests</h3></div>
           <table>
             <thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
@@ -478,39 +621,31 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- ADMIN: PENDING -->
+<!-- ADMIN PAGES (Pending / Approved / Returned / Lost / Items / Inventory) -->
 <div class="page" id="page-a-pending">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Pending Requests</h2>
     <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Needed</th><th>Purpose</th><th>Status</th><th>Actions</th></tr></thead><tbody id="pending-table"></tbody></table></div>
   </div>
 </div>
-
-<!-- ADMIN: APPROVED -->
 <div class="page" id="page-a-approved">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Approved Requests</h2>
     <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Needed</th><th>Return Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="approved-table"></tbody></table></div>
   </div>
 </div>
-
-<!-- ADMIN: RETURNED -->
 <div class="page" id="page-a-returned">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Returned Items</h2>
-    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Returned</th><th>Status</th><th>Notes</th></tr></thead><tbody id="returned-table"></tbody></table></div>
+    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Return Date</th><th>Status</th><th>Notes</th></tr></thead><tbody id="returned-table"></tbody></table></div>
   </div>
 </div>
-
-<!-- ADMIN: LOST/DAMAGED -->
 <div class="page" id="page-a-lost">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Lost / Damaged Items</h2>
     <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Contact</th><th>Item</th><th>Qty</th><th>Date Reported</th><th>Status</th><th>Notes</th></tr></thead><tbody id="lost-table"></tbody></table></div>
   </div>
 </div>
-
-<!-- ADMIN: ITEMS -->
 <div class="page" id="page-a-items">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Manage Items</h2>
@@ -520,23 +655,17 @@ footer span { color: var(--gold); }
     </div>
   </div>
 </div>
-
-<!-- ADMIN: INVENTORY -->
 <div class="page" id="page-a-inventory">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Inventory Overview</h2>
     <div class="admin-grid">
       <div class="card">
-        <div class="card-header"><h3>Current Stock</h3></div>
+        <div class="card-header"><h3>Current Stock (Live)</h3></div>
         <table class="inv-table"><thead><tr><th>Item</th><th>Available</th><th>In Use</th><th>Lost/Dmgd</th><th>Actions</th></tr></thead><tbody id="inventory-table"></tbody></table>
       </div>
       <div class="card">
         <div class="card-header"><h3>Summary</h3></div>
-        <div class="inv-items" style="flex-direction:column;">
-          <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;"><div class="label">Total Chairs</div><div class="count" style="font-size:1.2rem;">520</div></div>
-          <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;"><div class="label">Total Tents</div><div class="count" style="font-size:1.2rem;">6</div></div>
-          <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;"><div class="label">Total Tables</div><div class="count" style="font-size:1.2rem;">16</div></div>
-        </div>
+        <div class="inv-items" style="flex-direction:column;" id="inv-summary-items">Loading…</div>
       </div>
     </div>
   </div>
@@ -555,94 +684,120 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Saving to Firebase…</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<footer>&copy; 2026 <span>Barangay Camp Tinio</span> &mdash; Equipment Borrowing and Monitoring System. All rights reserved.</footer>
+<footer>&copy; 2026 <span>Barangay Camp Tinio</span> &mdash; Equipment Borrowing and Monitoring System. Powered by Firebase Firestore.</footer>
 
 <script>
-// ─── CREDENTIALS ───────────────────────────────────────────────
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin123';
-let isLoggedIn = false;
+// ─── GLOBAL STATE (populated by Firestore real-time listeners) ──
+window.__requests = [];
+window.__items    = [];
+window.__isLoggedIn = false;
 
-// ─── DATA ──────────────────────────────────────────────────────
-let requests = [
-  { id:'REQ-102', name:'Juan Dela Cruz',   contact:'09171234567', item:'Monoblock Chairs',  qty:20, purpose:'Birthday party',         dateNeeded:'2025-04-15', returnDate:'2025-04-16', idNum:'VID-001', status:'Approved',      lostNote:'', returnedNote:'' },
-  { id:'REQ-101', name:'Maria Santos',     contact:'09281234567', item:'Collapsible Tents', qty:2,  purpose:'Community event',         dateNeeded:'2025-04-20', returnDate:'2025-04-21', idNum:'VID-002', status:'Approved',      lostNote:'', returnedNote:'' },
-  { id:'REQ-100', name:'Maria De Cruz',    contact:'09391234567', item:'Monoblock Chairs',  qty:15, purpose:'Graduation celebration',  dateNeeded:'2025-04-10', returnDate:'2025-04-11', idNum:'VID-003', status:'Returned',      lostNote:'', returnedNote:'All complete' },
-  { id:'REQ-99',  name:'Pedro Reyes',      contact:'09501234567', item:'Wooden Tables',     qty:3,  purpose:'Fiesta',                  dateNeeded:'2025-04-05', returnDate:'2025-04-06', idNum:'VID-004', status:'Pending',       lostNote:'', returnedNote:'' },
-  { id:'REQ-98',  name:'Ana Garcia',       contact:'09611234567', item:'Monoblock Chairs',  qty:10, purpose:'Wedding',                 dateNeeded:'2025-04-20', returnDate:'2025-04-21', idNum:'VID-005', status:'Pending',       lostNote:'', returnedNote:'' },
-  { id:'REQ-97',  name:'Carlos Bautista',  contact:'09721234567', item:'Collapsible Tents', qty:1,  purpose:'Company outing',          dateNeeded:'2025-04-10', returnDate:'2025-04-11', idNum:'VID-006', status:'Lost/Damaged',  lostNote:'1 tent pole missing', returnedNote:'' },
-  { id:'REQ-96',  name:'Maria De Cruz',    contact:'09391234567', item:'Monoblock Chairs',  qty:8,  purpose:'Community meeting',       dateNeeded:'2025-04-10', returnDate:'2025-04-11', idNum:'VID-003', status:'Pending',       lostNote:'', returnedNote:'' },
-];
-
-let items = [
-  { name:'Monoblock Chairs',  icon:'🪑', total:520, inUse:12, lost:4 },
-  { name:'Collapsible Tents', icon:'⛺', total:6,   inUse:2,  lost:2 },
-  { name:'Wooden Tables',     icon:'🪵', total:16,  inUse:4,  lost:1 },
-];
-
-let reqCounter = 103;
 const allPages = ['home','borrow','inventory','login','dashboard','a-pending','a-approved','a-returned','a-lost','a-items','a-inventory'];
+
+// ─── FIREBASE STATUS CHECK ─────────────────────────────────────
+// Poll until __fb is ready, then mark as connected
+(function waitForFirebase() {
+  let attempts = 0;
+  const check = setInterval(() => {
+    attempts++;
+    if (window.__fb) {
+      document.getElementById('fb-banner').classList.remove('offline');
+      document.getElementById('fb-status-text').textContent = '🔥 Firebase Connected — Real-time Firestore & Auth Active';
+      clearInterval(check);
+    } else if (attempts > 30) {
+      document.getElementById('fb-status-text').textContent = '⚠️ Firebase SDK failed to load — Check your config';
+      clearInterval(check);
+    }
+  }, 200);
+})();
+
+// ─── REFRESH ALL VISIBLE VIEWS ─────────────────────────────────
+function refreshAllViews() {
+  updateHomeCounters();
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const id = activePage.id.replace('page-', '');
+  if (id === 'inventory')  renderInventoryPage();
+  if (id === 'dashboard')  renderDashboard();
+  if (id === 'a-pending')  renderFilteredTable('pending-table','Pending',true);
+  if (id === 'a-approved') renderFilteredTable('approved-table','Approved',true);
+  if (id === 'a-returned') renderReturnedTable();
+  if (id === 'a-lost')     renderLostTable();
+  if (id === 'a-items')    renderItemsTable();
+  if (id === 'a-inventory') renderInventoryTable();
+}
 
 // ─── DATE HELPERS ──────────────────────────────────────────────
 function getMonthBounds() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const firstDay = new Date(y, m, 1);
-  const lastDay  = new Date(y, m + 1, 0);
+  const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
   const fmt = d => d.toISOString().split('T')[0];
-  return { min: fmt(firstDay), max: fmt(lastDay) };
+  return { min: fmt(new Date(y,m,1)), max: fmt(new Date(y,m+1,0)) };
 }
-
 function setDateLimits() {
   const { min, max } = getMonthBounds();
-  ['f-date','f-return'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) { el.min = min; el.max = max; }
-  });
+  ['f-date','f-return'].forEach(id => { const el = document.getElementById(id); if(el){el.min=min;el.max=max;} });
 }
 
 // ─── AUTH ──────────────────────────────────────────────────────
-function attemptLogin() {
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value;
+async function attemptLogin() {
+  const email = document.getElementById('login-user').value.trim();
+  const pass  = document.getElementById('login-pass').value;
   const errorEl = document.getElementById('login-error');
-  if(user === ADMIN_USER && pass === ADMIN_PASS) {
-    isLoggedIn = true;
-    errorEl.classList.remove('show');
-    document.getElementById('login-user').value = '';
-    document.getElementById('login-pass').value = '';
-    showAdmin();
-    showToast('✅ Welcome, Admin!');
-  } else {
+  errorEl.classList.remove('show');
+  if (!email || !pass) { errorEl.textContent='Please enter email and password.'; errorEl.classList.add('show'); return; }
+  showLoading('Authenticating with Firebase…');
+  try {
+    await window.__firestore.login(email, pass);
+    // onAuthStateChanged will call showAdmin()
+    document.getElementById('login-user').value='';
+    document.getElementById('login-pass').value='';
+    const emailLabel = document.getElementById('admin-email-display');
+    if (emailLabel) emailLabel.textContent = '👤 '+email.split('@')[0];
+  } catch(e) {
+    errorEl.textContent = 'Login failed: '+(e.message || 'Invalid credentials.');
     errorEl.classList.add('show');
+  } finally {
+    hideLoading();
   }
 }
 
-function logoutAdmin() {
-  isLoggedIn = false;
-  showPublic();
-  showToast('👋 Logged out successfully.');
+async function logoutAdmin() {
+  showLoading('Signing out…');
+  try {
+    await window.__firestore.logout();
+    showPublic();
+    showToast('👋 Logged out successfully.');
+  } catch(e) {
+    showToast('⚠️ Logout error: '+e.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 // ─── NAVIGATION ────────────────────────────────────────────────
 function showPage(id, btn) {
-  allPages.forEach(p => { const el = document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
+  allPages.forEach(p => { const el=document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
   const target = document.getElementById('page-'+id);
   if(target) target.classList.add('active');
-  if(btn) { document.querySelectorAll('#public-nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+  if(btn) { document.querySelectorAll('#public-nav button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
   if(id==='inventory') renderInventoryPage();
-  if(id==='borrow') setDateLimits();
+  if(id==='borrow') { setDateLimits(); document.getElementById('borrow-success').classList.remove('show'); }
   if(id==='login') document.getElementById('login-error').classList.remove('show');
 }
 
 function showAdminPage(id, btn) {
-  allPages.forEach(p => { const el = document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
+  allPages.forEach(p => { const el=document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
   const target = document.getElementById('page-'+id);
   if(target) target.classList.add('active');
-  document.querySelectorAll('#admin-nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#admin-nav button').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   renderAdminPage(id);
 }
@@ -657,19 +812,19 @@ function navTo(id) {
 }
 
 function showAdmin() {
-  document.getElementById('public-nav').style.display = 'none';
-  document.getElementById('admin-nav').style.display = 'flex';
+  document.getElementById('public-nav').style.display='none';
+  document.getElementById('admin-nav').style.display='flex';
   showAdminPage('dashboard', document.querySelector('#admin-nav button'));
 }
 
 function showPublic() {
-  document.getElementById('admin-nav').style.display = 'none';
-  document.getElementById('public-nav').style.display = 'flex';
+  document.getElementById('admin-nav').style.display='none';
+  document.getElementById('public-nav').style.display='flex';
   showPage('home', document.querySelector('#public-nav button'));
 }
 
-// ─── SUBMIT REQUEST ────────────────────────────────────────────
-function submitRequest() {
+// ─── SUBMIT REQUEST → FIRESTORE ────────────────────────────────
+async function submitRequest() {
   const name      = document.getElementById('f-name').value.trim();
   const contact   = document.getElementById('f-contact').value.trim();
   const equipment = document.getElementById('f-equipment').value;
@@ -679,72 +834,85 @@ function submitRequest() {
   const ret       = document.getElementById('f-return').value;
   const idNum     = document.getElementById('f-id').value.trim();
   if(!name||!contact||!equipment||!qty||!purpose||!date||!ret||!idNum) { showToast('⚠️ Please fill in all fields.'); return; }
-  const newId = 'REQ-'+reqCounter++;
-  requests.unshift({ id:newId, name, contact, item:equipment, qty:parseInt(qty), purpose, dateNeeded:date, returnDate:ret, idNum, status:'Pending', lostNote:'', returnedNote:'' });
-  document.getElementById('req-id-out').textContent = newId;
-  document.getElementById('borrow-success').classList.add('show');
-  ['f-name','f-contact','f-qty','f-purpose','f-date','f-return','f-id'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-equipment').value='';
-  updateDashStats();
-  showToast('✅ Request '+newId+' submitted!');
+  showLoading('Saving request to Firebase…');
+  try {
+    const docRef = await window.__firestore.addRequest({ name, contact, item:equipment, qty:parseInt(qty), purpose, dateNeeded:date, returnDate:ret, idNum });
+    const shortId = 'REQ-'+docRef.id.slice(-6).toUpperCase();
+    // Store display ID back onto the doc
+    await window.__firestore.updateRequest(docRef.id, { displayId: shortId });
+    document.getElementById('req-id-out').textContent = shortId;
+    document.getElementById('borrow-success').classList.add('show');
+    ['f-name','f-contact','f-qty','f-purpose','f-date','f-return','f-id'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-equipment').value='';
+    showToast('✅ Request '+shortId+' saved to Firebase!');
+  } catch(e) {
+    showToast('❌ Error: '+(e.message||'Could not save request.'));
+  } finally {
+    hideLoading();
+  }
 }
 
 // ─── INVENTORY HELPERS ─────────────────────────────────────────
-function getAvailable(it) { return Math.max(0, it.total - it.inUse - it.lost); }
-
+function getAvailable(it) { return Math.max(0, (it.total||0) - (it.inUse||0) - (it.lost||0)); }
 function getAvailBadge(it) {
-  const avail = getAvailable(it);
-  const pct = avail / it.total;
+  const avail=getAvailable(it); const pct=avail/(it.total||1);
   if(avail===0) return '<span class="badge badge-out">Out of Stock</span>';
   if(pct<=0.2)  return '<span class="badge badge-low">Low Stock</span>';
   return '<span class="badge badge-available">Available</span>';
 }
-
 function getBarColor(it) {
-  const pct = getAvailable(it)/it.total;
-  if(pct<=0)   return 'var(--red)';
+  const pct=getAvailable(it)/(it.total||1);
+  if(pct<=0)  return 'var(--red)';
   if(pct<=0.2) return 'var(--orange)';
   return 'var(--green-light)';
+}
+
+// ─── HOME COUNTERS ─────────────────────────────────────────────
+function updateHomeCounters() {
+  const chair = window.__items.find(i=>i.name==='Monoblock Chairs');
+  const tent  = window.__items.find(i=>i.name==='Collapsible Tents');
+  const table = window.__items.find(i=>i.name==='Wooden Tables');
+  const pc=document.getElementById('pub-chairs'), pt=document.getElementById('pub-tents'), ptb=document.getElementById('pub-tables');
+  if(pc&&chair)  pc.textContent  = getAvailable(chair);
+  if(pt&&tent)   pt.textContent  = getAvailable(tent);
+  if(ptb&&table) ptb.textContent = getAvailable(table);
 }
 
 // ─── PUBLIC INVENTORY PAGE ─────────────────────────────────────
 function renderInventoryPage() {
   const grid = document.getElementById('inv-cards-grid');
   if(!grid) return;
-  grid.innerHTML = items.map(it => {
-    const avail = getAvailable(it);
-    const pct   = Math.round((avail/it.total)*100);
-    return `
-      <div class="inv-card">
-        <div class="ic-icon">${it.icon}</div>
-        <div class="ic-name">${it.name}</div>
-        <div class="ic-avail-big">${avail}</div>
-        <div class="ic-avail-label">Available</div>
-        <div class="avail-bar-wrap" style="margin:8px 0;">
-          <div class="avail-bar-bg"><div class="avail-bar-fill" style="width:${pct}%;background:${getBarColor(it)};"></div></div>
-        </div>
-        <div style="margin-top:2px;">${getAvailBadge(it)}</div>
-        <hr class="ic-divider">
-        <div class="ic-rows">
-          <div class="ic-row"><span class="ic-lbl">Total</span><span class="ic-val">${it.total}</span></div>
-          <div class="ic-row"><span class="ic-lbl">In Use</span><span class="ic-val orange">${it.inUse}</span></div>
-          <div class="ic-row"><span class="ic-lbl">Lost/Damaged</span><span class="ic-val red">${it.lost}</span></div>
-        </div>
-      </div>`;
-  }).join('');
+  const items = window.__items;
+  grid.innerHTML = items.length ? items.map(it => {
+    const avail=getAvailable(it); const pct=Math.round((avail/(it.total||1))*100);
+    return `<div class="inv-card">
+      <div class="ic-icon">${it.icon||'📦'}</div>
+      <div class="ic-name">${it.name}</div>
+      <div class="ic-avail-big">${avail}</div>
+      <div class="ic-avail-label">Available</div>
+      <div class="avail-bar-wrap" style="margin:8px 0;">
+        <div class="avail-bar-bg"><div class="avail-bar-fill" style="width:${pct}%;background:${getBarColor(it)};"></div></div>
+      </div>
+      <div style="margin-top:2px;">${getAvailBadge(it)}</div>
+      <hr class="ic-divider">
+      <div class="ic-rows">
+        <div class="ic-row"><span class="ic-lbl">Total</span><span class="ic-val">${it.total}</span></div>
+        <div class="ic-row"><span class="ic-lbl">In Use</span><span class="ic-val orange">${it.inUse||0}</span></div>
+        <div class="ic-row"><span class="ic-lbl">Lost/Damaged</span><span class="ic-val red">${it.lost||0}</span></div>
+      </div>
+    </div>`;
+  }).join('') : '<p style="color:var(--text-muted);padding:16px;">Loading inventory from Firebase…</p>';
 
   const tbody = document.getElementById('pub-inv-requests-table');
   if(tbody) {
-    tbody.innerHTML = requests.map(r => `
+    const reqs = window.__requests;
+    tbody.innerHTML = reqs.length ? reqs.map(r => `
       <tr>
-        <td class="req-id">${r.id}</td>
-        <td>${r.name}</td>
-        <td>${r.item}</td>
-        <td>${r.qty}</td>
-        <td>${r.dateNeeded}</td>
+        <td class="req-id">${r.displayId||r._id}</td>
+        <td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
         <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
-        <td><button class="link-btn" onclick="viewDetail('${r.id}')">Details</button></td>
-      </tr>`).join('');
+        <td><button class="link-btn" onclick="viewDetail('${r._id}')">Details</button></td>
+      </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No requests yet.</td></tr>';
   }
   document.getElementById('inv-search').value='';
   document.getElementById('inv-search-result').classList.remove('show');
@@ -754,50 +922,45 @@ function searchInventory() {
   const q  = document.getElementById('inv-search').value.trim().toLowerCase();
   const el = document.getElementById('inv-search-result');
   if(!q) { el.classList.remove('show'); return; }
-  const found = items.find(it => it.name.toLowerCase().includes(q));
+  const found = window.__items.find(it=>it.name.toLowerCase().includes(q));
   if(!found) {
-    el.classList.add('show');
-    el.style.background='#fce4ec'; el.style.borderColor='#f48fb1';
-    el.innerHTML = '<h4 style="color:#b71c1c;">❌ No item found matching "'+q+'".</h4>';
-    return;
+    el.classList.add('show'); el.style.background='#fce4ec'; el.style.borderColor='#f48fb1';
+    el.innerHTML='<h4 style="color:#b71c1c;">❌ No item found matching "'+q+'".</h4>'; return;
   }
-  el.style.background=''; el.style.borderColor='';
-  el.classList.add('show');
-  const avail = getAvailable(found);
-  const pct   = Math.round((avail/found.total)*100);
-  el.innerHTML = `
-    <h4>${found.icon} ${found.name} — Inventory Details</h4>
+  el.style.background=''; el.style.borderColor=''; el.classList.add('show');
+  const avail=getAvailable(found); const pct=Math.round((avail/(found.total||1))*100);
+  el.innerHTML=`<h4>${found.icon||'📦'} ${found.name} — Inventory Details</h4>
     <div class="inv-detail-row"><span class="dl">Total Quantity</span><span class="dv">${found.total}</span></div>
     <div class="inv-detail-row"><span class="dl">Currently Available</span><span class="dv">${avail} (${pct}%)</span></div>
-    <div class="inv-detail-row"><span class="dl">Currently In Use</span><span class="dv">${found.inUse}</span></div>
-    <div class="inv-detail-row"><span class="dl">Lost / Damaged</span><span class="dv">${found.lost}</span></div>
-    <div class="inv-detail-row"><span class="dl">Status</span><span class="dv">${avail===0?'❌ Out of Stock':avail<=found.total*0.2?'⚠️ Low Stock':'✅ In Stock'}</span></div>`;
+    <div class="inv-detail-row"><span class="dl">Currently In Use</span><span class="dv">${found.inUse||0}</span></div>
+    <div class="inv-detail-row"><span class="dl">Lost / Damaged</span><span class="dv">${found.lost||0}</span></div>
+    <div class="inv-detail-row"><span class="dl">Status</span><span class="dv">${avail===0?'❌ Out of Stock':avail<=(found.total||1)*0.2?'⚠️ Low Stock':'✅ In Stock'}</span></div>`;
 }
 
 // ─── DETAIL MODAL ──────────────────────────────────────────────
 function viewDetail(id) {
-  const r = requests.find(x=>x.id===id);
+  const r = window.__requests.find(x=>x._id===id);
   if(!r) return;
-  document.getElementById('modal-title').textContent = 'Request Details – '+r.id;
-  document.getElementById('modal-body').textContent = '';
-  document.getElementById('modal-form').innerHTML = `
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Borrower</span><span style="font-weight:600;">${r.name}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Contact</span><span style="font-weight:600;">${r.contact}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Item</span><span style="font-weight:600;">${r.item} (${r.qty})</span></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Purpose</span><span style="font-weight:600;">${r.purpose}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Date Needed</span><span style="font-weight:600;">${r.dateNeeded}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Return Date</span><span style="font-weight:600;">${r.returnDate}</span></div>
-    ${r.lostNote?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Lost/Dmgd Note</span><span style="font-weight:600;color:var(--red);">${r.lostNote}</span></div>`:''}
-    ${r.returnedNote?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Return Note</span><span style="font-weight:600;">${r.returnedNote}</span></div>`:''}
-    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:0.93rem;"><span style="color:var(--text-muted);">Status</span><span style="font-weight:600;"><span class="badge ${badgeClass(r.status)}">${r.status}</span></span></div>`;
-  document.getElementById('modal-confirm').textContent = 'Close';
-  document.getElementById('modal-confirm').onclick = () => closeModal();
+  document.getElementById('modal-title').textContent='Request Details – '+(r.displayId||r._id);
+  document.getElementById('modal-body').textContent='';
+  const rows = [
+    ['Borrower',r.name],['Contact',r.contact],['Item',r.item+' ('+r.qty+')'],
+    ['Purpose',r.purpose],['Date Needed',r.dateNeeded],['Return Date',r.returnDate],
+    ...(r.lostNote?[['Lost/Dmgd Note','<span style="color:var(--red);">'+r.lostNote+'</span>']]:[]),
+    ...(r.returnedNote?[['Return Note',r.returnedNote]]:[]),
+    ['Status','<span class="badge '+badgeClass(r.status)+'">'+r.status+'</span>'],
+  ];
+  document.getElementById('modal-form').innerHTML = rows.map(([l,v])=>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;">
+      <span style="color:var(--text-muted);">${l}</span><span style="font-weight:600;">${v}</span></div>`).join('');
+  document.getElementById('modal-confirm').textContent='Close';
+  document.getElementById('modal-confirm').onclick=()=>closeModal();
   document.getElementById('modal').classList.add('show');
 }
 
 // ─── ADMIN RENDER ──────────────────────────────────────────────
 function renderAdminPage(id) {
-  if(id==='dashboard')   renderDashboard();
+  if(id==='dashboard')    renderDashboard();
   else if(id==='a-pending')  renderFilteredTable('pending-table','Pending',true);
   else if(id==='a-approved') renderFilteredTable('approved-table','Approved',true);
   else if(id==='a-returned') renderReturnedTable();
@@ -807,266 +970,246 @@ function renderAdminPage(id) {
 }
 
 function renderDashboard() {
-  updateDashStats();
+  const reqs = window.__requests;
+  document.getElementById('dash-pending').textContent  = reqs.filter(r=>r.status==='Pending').length;
+  document.getElementById('dash-approved').textContent = reqs.filter(r=>r.status==='Approved').length;
+  document.getElementById('dash-returned').textContent = reqs.filter(r=>r.status==='Returned').length;
+  document.getElementById('dash-lost').textContent     = reqs.filter(r=>r.status==='Lost/Damaged').length;
+
+  // Dash inventory items
+  const invEl = document.getElementById('dash-inv-items');
+  if(invEl) invEl.innerHTML = window.__items.map(it=>`
+    <div class="inv-item">
+      <div class="icon">${it.icon||'📦'}</div>
+      <div class="count">${getAvailable(it)}</div>
+      <div class="label">${it.name.split(' ')[0]}</div>
+    </div>`).join('');
+
   const tbody = document.getElementById('dash-recent-table');
-  tbody.innerHTML = requests.slice(0,5).map(r=>`
+  tbody.innerHTML = reqs.slice(0,5).map(r=>`
     <tr>
-      <td class="req-id">${r.id}</td>
-      <td>${r.name}</td>
-      <td><strong>${r.item}</strong></td>
-      <td>${r.dateNeeded}</td>
+      <td class="req-id">${r.displayId||r._id}</td>
+      <td>${r.name}</td><td><strong>${r.item}</strong></td><td>${r.dateNeeded}</td>
       <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
       <td>
-        ${r.status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r.id}')">Approve</button> `:''}
-        ${r.status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r.id}')">Mark Return</button> `:''}
-        <button class="link-btn" onclick="viewDetail('${r.id}')">Details</button>
+        ${r.status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r._id}')">Approve</button> `:''}
+        ${r.status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r._id}')">Mark Return</button> `:''}
+        <button class="link-btn" onclick="viewDetail('${r._id}')">Details</button>
       </td>
     </tr>`).join('');
 }
 
 function renderFilteredTable(tbodyId, status, showActions) {
-  const filtered = requests.filter(r=>r.status===status);
+  const filtered = window.__requests.filter(r=>r.status===status);
   const tbody = document.getElementById(tbodyId);
   if(!tbody) return;
   if(!filtered.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
   tbody.innerHTML = filtered.map(r=>`
     <tr>
-      <td class="req-id">${r.id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
+      <td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
       ${status==='Approved'?`<td>${r.returnDate}</td>`:`<td>${r.purpose}</td>`}
       <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
       ${showActions?`<td>
-        ${status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r.id}');renderAdminPage('a-pending')">Approve</button> `:''}
-        ${status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r.id}');renderAdminPage('a-approved')">Mark Return</button> `:''}
-        <button class="link-btn" onclick="viewDetail('${r.id}')">Details</button>
+        ${status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r._id}')">Approve</button> `:''}
+        ${status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r._id}')">Mark Return</button> `:''}
+        <button class="link-btn" onclick="viewDetail('${r._id}')">Details</button>
       </td>`:''}
     </tr>`).join('');
 }
 
 function renderReturnedTable() {
-  const filtered = requests.filter(r=>r.status==='Returned');
-  const tbody = document.getElementById('returned-table');
-  if(!tbody) return;
-  if(!filtered.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
-  tbody.innerHTML = filtered.map(r=>`
-    <tr>
-      <td class="req-id">${r.id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
-      <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
-      <td style="font-size:0.85rem;color:var(--text-muted);">${r.returnedNote||'—'}</td>
-    </tr>`).join('');
+  const filtered=window.__requests.filter(r=>r.status==='Returned');
+  const tbody=document.getElementById('returned-table'); if(!tbody) return;
+  tbody.innerHTML=filtered.length?filtered.map(r=>`
+    <tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
+    <td><span class="badge badge-returned">Returned</span></td>
+    <td style="font-size:0.85rem;color:var(--text-muted);">${r.returnedNote||'—'}</td></tr>`)
+    .join(''):'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
 }
 
 function renderLostTable() {
-  const filtered = requests.filter(r=>r.status==='Lost/Damaged');
-  const tbody = document.getElementById('lost-table');
-  if(!tbody) return;
-  if(!filtered.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
-  tbody.innerHTML = filtered.map(r=>`
-    <tr>
-      <td class="req-id">${r.id}</td><td>${r.name}</td>
-      <td><a href="tel:${r.contact}" style="color:var(--navy-mid);font-weight:700;">${r.contact}</a></td>
-      <td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
-      <td><span class="badge badge-lost">Lost/Damaged</span></td>
-      <td style="font-size:0.85rem;color:var(--red);">${r.lostNote||'—'}</td>
-    </tr>`).join('');
+  const filtered=window.__requests.filter(r=>r.status==='Lost/Damaged');
+  const tbody=document.getElementById('lost-table'); if(!tbody) return;
+  tbody.innerHTML=filtered.length?filtered.map(r=>`
+    <tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td>
+    <td><a href="tel:${r.contact}" style="color:var(--navy-mid);font-weight:700;">${r.contact}</a></td>
+    <td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
+    <td><span class="badge badge-lost">Lost/Damaged</span></td>
+    <td style="font-size:0.85rem;color:var(--red);">${r.lostNote||'—'}</td></tr>`)
+    .join(''):'<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
 }
 
 function renderItemsTable() {
-  const tbody = document.getElementById('items-table');
-  if(!tbody) return;
-  tbody.innerHTML = items.map((it,i)=>`
-    <tr>
-      <td>${it.icon} ${it.name}</td><td>${it.total}</td>
-      <td class="available">${getAvailable(it)}</td>
-      <td class="in-use">${it.inUse}</td>
-      <td class="lost">${it.lost}</td>
-      <td><button class="btn-edit" onclick="editItem(${i})">Edit</button></td>
-    </tr>`).join('');
+  const tbody=document.getElementById('items-table'); if(!tbody) return;
+  tbody.innerHTML=window.__items.map(it=>`
+    <tr><td>${it.icon||'📦'} ${it.name}</td><td>${it.total}</td>
+    <td class="available">${getAvailable(it)}</td>
+    <td class="in-use">${it.inUse||0}</td>
+    <td class="lost">${it.lost||0}</td>
+    <td><button class="btn-edit" onclick="editItem('${it._id}')">Edit</button></td></tr>`).join('');
 }
 
 function renderInventoryTable() {
-  const tbody = document.getElementById('inventory-table');
-  if(!tbody) return;
-  tbody.innerHTML = items.map((it,i)=>`
-    <tr>
-      <td>${it.icon} ${it.name}</td>
-      <td class="available">${getAvailable(it)}</td>
-      <td class="in-use">${it.inUse}</td>
-      <td class="lost">${it.lost}</td>
-      <td><button class="btn-edit" onclick="editItem(${i})">Edit</button></td>
-    </tr>`).join('');
+  const tbody=document.getElementById('inventory-table'); if(!tbody) return;
+  tbody.innerHTML=window.__items.map(it=>`
+    <tr><td>${it.icon||'📦'} ${it.name}</td>
+    <td class="available">${getAvailable(it)}</td>
+    <td class="in-use">${it.inUse||0}</td>
+    <td class="lost">${it.lost||0}</td>
+    <td><button class="btn-edit" onclick="editItem('${it._id}')">Edit</button></td></tr>`).join('');
+  const summEl=document.getElementById('inv-summary-items');
+  if(summEl) summEl.innerHTML=window.__items.map(it=>`
+    <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;">
+      <div class="label">${it.name}</div>
+      <div class="count" style="font-size:1.2rem;">${it.total}</div>
+    </div>`).join('');
 }
 
-// ─── APPROVE REQUEST (with SMS trigger) ───────────────────────
+// ─── APPROVE REQUEST → FIRESTORE ──────────────────────────────
 function approveReq(id) {
-  const r = requests.find(x=>x.id===id);
+  const r = window.__requests.find(x=>x._id===id);
   if(!r) return;
-
-  // Build SMS message
-  const smsText = encodeURIComponent(
-    `[Barangay Camp Tinio] Your equipment borrowing request ${r.id} for ${r.qty} ${r.item} has been APPROVED. ` +
-    `Date Needed: ${r.dateNeeded}. Please return by ${r.returnDate}. Thank you!`
-  );
-
-  document.getElementById('modal-title').textContent = 'Approve Request – '+r.id;
-  document.getElementById('modal-body').textContent = 'Confirm approval for: '+r.name+' ('+r.item+' x'+r.qty+')';
-  document.getElementById('modal-form').innerHTML = `
-    <div class="sms-notice">
-      📱 <span>Send SMS approval to <strong>${r.contact}</strong>:<br>
-      <a href="sms:${r.contact}?body=${smsText}" onclick="showToast('📨 SMS app opened for ${r.contact}')">
-        📤 Tap to open SMS for ${r.contact}
-      </a></span>
-    </div>
-    <p style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">
-      Clicking the SMS link will open your device's messaging app pre-filled with the approval message.
-    </p>`;
-  document.getElementById('modal-confirm').textContent = '✅ Confirm Approve';
-  document.getElementById('modal-confirm').onclick = () => {
-    r.status='Approved';
-    updateDashStats();
-    showToast('✅ '+id+' approved! SMS link provided for '+r.contact);
-    closeModal();
-    renderDashboard();
+  const smsText = encodeURIComponent(`[Barangay Camp Tinio] Your request ${r.displayId||id} for ${r.qty} ${r.item} has been APPROVED. Date Needed: ${r.dateNeeded}. Return by: ${r.returnDate}. Thank you!`);
+  document.getElementById('modal-title').textContent='Approve Request – '+(r.displayId||id);
+  document.getElementById('modal-body').textContent='Confirm approval for: '+r.name+' ('+r.item+' x'+r.qty+')';
+  document.getElementById('modal-form').innerHTML=`
+    <div class="sms-notice">📱 <span>SMS borrower at <strong>${r.contact}</strong>:<br>
+      <a href="sms:${r.contact}?body=${smsText}" onclick="showToast('📨 SMS app opened')">📤 Tap to open SMS for ${r.contact}</a></span></div>`;
+  document.getElementById('modal-confirm').textContent='✅ Confirm Approve';
+  document.getElementById('modal-confirm').onclick = async () => {
+    showLoading('Updating Firebase…');
+    try {
+      await window.__firestore.updateRequest(id, { status:'Approved' });
+      // Update inUse count on corresponding item
+      const itemDoc = window.__items.find(i=>i.name===r.item);
+      if(itemDoc) await window.__firestore.updateItem(itemDoc._id, { inUse: (itemDoc.inUse||0)+r.qty });
+      showToast('✅ '+(r.displayId||id)+' approved & saved to Firebase!');
+    } catch(e) { showToast('❌ Error: '+e.message); }
+    finally { hideLoading(); closeModal(); }
   };
   document.getElementById('modal').classList.add('show');
 }
 
-// ─── RETURN MODAL (with Lost/Damaged option) ──────────────────
+// ─── RETURN MODAL → FIRESTORE ─────────────────────────────────
 function openReturnModal(id) {
-  const r = requests.find(x=>x.id===id);
+  const r = window.__requests.find(x=>x._id===id);
   if(!r) return;
-
-  document.getElementById('modal-title').textContent = 'Mark as Returned – '+r.id;
-  document.getElementById('modal-body').textContent = r.name+' returning '+r.qty+' '+r.item;
-  document.getElementById('modal-form').innerHTML = `
+  document.getElementById('modal-title').textContent='Mark as Returned – '+(r.displayId||id);
+  document.getElementById('modal-body').textContent=r.name+' returning '+r.qty+' '+r.item;
+  document.getElementById('modal-form').innerHTML=`
     <div class="form-group">
       <label>Return Notes (optional)</label>
       <input type="text" id="return-note-input" placeholder="e.g. All items complete, good condition">
     </div>
     <div class="lost-check-group">
-      <label>
-        <input type="checkbox" id="lost-check" onchange="toggleLostDetail()">
-        ⚠️ Some items are Lost or Damaged
-      </label>
+      <label><input type="checkbox" id="lost-check" onchange="toggleLostDetail()">⚠️ Some items are Lost or Damaged</label>
       <div class="lost-detail" id="lost-detail">
         <div class="form-group" style="margin-top:10px;margin-bottom:0;">
           <label style="color:var(--red);">Describe the Lost/Damaged Item(s)</label>
           <input type="text" id="lost-note-input" placeholder="e.g. 2 chairs broken, 1 tent missing">
         </div>
-        <div class="sms-notice" style="margin-top:10px;">
-          📱 <span>SMS borrower about damage at <strong>${r.contact}</strong>:<br>
-          <a href="sms:${r.contact}?body=${encodeURIComponent('[Barangay Camp Tinio] Your borrowing of '+r.item+' ('+r.id+') has been recorded with LOST/DAMAGED items. Please contact the barangay hall immediately. Thank you.')}"
-             onclick="showToast('📨 SMS app opened for ${r.contact}')">
-            📤 Tap to notify ${r.contact}
-          </a></span>
-        </div>
+        <div class="sms-notice" style="margin-top:10px;">📱 <span>Notify borrower at <strong>${r.contact}</strong>:<br>
+          <a href="sms:${r.contact}?body=${encodeURIComponent('[Barangay Camp Tinio] Your borrowing of '+r.item+' ('+r.displayId+') has LOST/DAMAGED items. Please contact barangay hall immediately.')}"
+             onclick="showToast('📨 SMS app opened')">📤 Tap to notify ${r.contact}</a></span></div>
       </div>
     </div>`;
-
-  document.getElementById('modal-confirm').textContent = '📦 Confirm Return';
-  document.getElementById('modal-confirm').onclick = () => {
-    const hasLost = document.getElementById('lost-check').checked;
-    const returnNote = document.getElementById('return-note-input').value.trim();
-    const lostNote   = hasLost ? (document.getElementById('lost-note-input').value.trim() || 'Damage reported') : '';
-
-    if(hasLost) {
-      r.status = 'Lost/Damaged';
-      r.lostNote = lostNote;
-      r.returnedNote = returnNote;
-      showToast('⚠️ '+id+' marked as Lost/Damaged. Notify borrower at '+r.contact);
-    } else {
-      r.status = 'Returned';
-      r.returnedNote = returnNote || 'All items returned';
-      r.lostNote = '';
-      showToast('📦 '+id+' marked as Returned.');
-    }
-    updateDashStats();
-    closeModal();
-    renderDashboard();
+  document.getElementById('modal-confirm').textContent='📦 Confirm Return';
+  document.getElementById('modal-confirm').onclick = async () => {
+    const hasLost   = document.getElementById('lost-check').checked;
+    const retNote   = document.getElementById('return-note-input').value.trim();
+    const lostNote  = hasLost?(document.getElementById('lost-note-input').value.trim()||'Damage reported'):'';
+    showLoading('Updating Firebase…');
+    try {
+      const newStatus = hasLost?'Lost/Damaged':'Returned';
+      await window.__firestore.updateRequest(id, { status:newStatus, returnedNote:retNote||'All items returned', lostNote });
+      // Release inUse count on corresponding item
+      const itemDoc = window.__items.find(i=>i.name===r.item);
+      if(itemDoc) {
+        const newInUse = Math.max(0,(itemDoc.inUse||0)-r.qty);
+        const newLost  = hasLost?(itemDoc.lost||0)+r.qty:(itemDoc.lost||0);
+        await window.__firestore.updateItem(itemDoc._id, { inUse:newInUse, lost:newLost });
+      }
+      showToast(hasLost?'⚠️ Marked as Lost/Damaged & saved to Firebase!':'📦 Marked as Returned & saved to Firebase!');
+    } catch(e) { showToast('❌ Error: '+e.message); }
+    finally { hideLoading(); closeModal(); }
   };
   document.getElementById('modal').classList.add('show');
 }
 
 function toggleLostDetail() {
-  const cb = document.getElementById('lost-check');
-  const detail = document.getElementById('lost-detail');
-  if(detail) detail.classList.toggle('show', cb.checked);
+  const cb=document.getElementById('lost-check'); const d=document.getElementById('lost-detail');
+  if(d) d.classList.toggle('show',cb.checked);
 }
 
-// ─── EDIT / ADD ITEMS ──────────────────────────────────────────
-function editItem(i) {
-  const it = items[i];
-  document.getElementById('modal-title').textContent = 'Edit: '+it.name;
-  document.getElementById('modal-body').textContent  = 'Update inventory numbers for this item.';
-  document.getElementById('modal-form').innerHTML = `
+// ─── EDIT / ADD ITEMS → FIRESTORE ─────────────────────────────
+function editItem(itemId) {
+  const it = window.__items.find(i=>i._id===itemId);
+  if(!it) return;
+  document.getElementById('modal-title').textContent='Edit: '+it.name;
+  document.getElementById('modal-body').textContent='Update inventory numbers. Changes saved to Firebase.';
+  document.getElementById('modal-form').innerHTML=`
     <div class="form-group"><label>Total Quantity</label><input type="number" id="edit-total" value="${it.total}" min="0"></div>
-    <div class="form-group"><label>In Use</label><input type="number" id="edit-inuse" value="${it.inUse}" min="0"></div>
-    <div class="form-group"><label>Lost/Damaged</label><input type="number" id="edit-lost" value="${it.lost}" min="0"></div>`;
-  document.getElementById('modal-confirm').textContent = 'Save Changes';
-  document.getElementById('modal-confirm').onclick = () => {
-    it.total = parseInt(document.getElementById('edit-total').value)||it.total;
-    it.inUse = parseInt(document.getElementById('edit-inuse').value)||0;
-    it.lost  = parseInt(document.getElementById('edit-lost').value)||0;
-    closeModal(); renderItemsTable(); renderInventoryTable(); updateDashStats();
-    showToast('✅ Item updated!');
+    <div class="form-group"><label>In Use</label><input type="number" id="edit-inuse" value="${it.inUse||0}" min="0"></div>
+    <div class="form-group"><label>Lost/Damaged</label><input type="number" id="edit-lost" value="${it.lost||0}" min="0"></div>`;
+  document.getElementById('modal-confirm').textContent='💾 Save to Firebase';
+  document.getElementById('modal-confirm').onclick = async () => {
+    const total = parseInt(document.getElementById('edit-total').value)||0;
+    const inUse = parseInt(document.getElementById('edit-inuse').value)||0;
+    const lost  = parseInt(document.getElementById('edit-lost').value)||0;
+    showLoading('Saving to Firebase…');
+    try {
+      await window.__firestore.updateItem(itemId, { total, inUse, lost });
+      showToast('✅ Item updated in Firebase!');
+    } catch(e) { showToast('❌ Error: '+e.message); }
+    finally { hideLoading(); closeModal(); }
   };
   document.getElementById('modal').classList.add('show');
 }
 
 function showAddItem() {
-  document.getElementById('modal-title').textContent = 'Add New Item';
-  document.getElementById('modal-body').textContent  = 'Enter details for the new equipment item.';
-  document.getElementById('modal-form').innerHTML = `
+  document.getElementById('modal-title').textContent='Add New Item';
+  document.getElementById('modal-body').textContent='New item will be saved to Firebase Firestore.';
+  document.getElementById('modal-form').innerHTML=`
     <div class="form-group"><label>Item Name</label><input type="text" id="add-name" placeholder="e.g. Sound System"></div>
+    <div class="form-group"><label>Icon (emoji)</label><input type="text" id="add-icon" placeholder="📦" maxlength="2" value="📦"></div>
     <div class="form-group"><label>Total Quantity</label><input type="number" id="add-total" placeholder="0" min="0"></div>`;
-  document.getElementById('modal-confirm').textContent = 'Add Item';
-  document.getElementById('modal-confirm').onclick = () => {
+  document.getElementById('modal-confirm').textContent='➕ Add to Firebase';
+  document.getElementById('modal-confirm').onclick = async () => {
     const name  = document.getElementById('add-name').value.trim();
+    const icon  = document.getElementById('add-icon').value.trim()||'📦';
     const total = parseInt(document.getElementById('add-total').value)||0;
     if(!name) { showToast('⚠️ Please enter item name.'); return; }
-    items.push({ name, icon:'📦', total, inUse:0, lost:0 });
-    closeModal(); renderItemsTable(); showToast('✅ Item added: '+name);
+    showLoading('Adding item to Firebase…');
+    try {
+      await window.__firestore.addItem({ name, icon, total });
+      showToast('✅ Item added: '+name);
+      closeModal();
+    } catch(e) { showToast('❌ Error: '+e.message); }
+    finally { hideLoading(); }
   };
   document.getElementById('modal').classList.add('show');
-}
-
-// ─── DASHBOARD STATS ───────────────────────────────────────────
-function updateDashStats() {
-  document.getElementById('dash-pending').textContent  = requests.filter(r=>r.status==='Pending').length;
-  document.getElementById('dash-approved').textContent = requests.filter(r=>r.status==='Approved').length;
-  document.getElementById('dash-returned').textContent = requests.filter(r=>r.status==='Returned').length;
-  document.getElementById('dash-lost').textContent     = requests.filter(r=>r.status==='Lost/Damaged').length;
-
-  const sum = (statusArr, item) => requests.filter(r=>statusArr.includes(r.status)&&r.item===item).reduce((s,r)=>s+r.qty,0);
-  const chairItem = items.find(i=>i.name==='Monoblock Chairs');
-  const tentItem  = items.find(i=>i.name==='Collapsible Tents');
-  const tableItem = items.find(i=>i.name==='Wooden Tables');
-  if(chairItem) chairItem.inUse = sum(['Approved'],'Monoblock Chairs');
-  if(tentItem)  tentItem.inUse  = sum(['Approved'],'Collapsible Tents');
-  if(tableItem) tableItem.inUse = sum(['Approved'],'Wooden Tables');
-
-  const pc=document.getElementById('pub-chairs'), pt=document.getElementById('pub-tents'), ptb=document.getElementById('pub-tables');
-  if(pc&&chairItem) pc.textContent  = getAvailable(chairItem);
-  if(pt&&tentItem)  pt.textContent  = getAvailable(tentItem);
-  if(ptb&&tableItem) ptb.textContent = getAvailable(tableItem);
 }
 
 // ─── UTILITIES ─────────────────────────────────────────────────
 function closeModal() { document.getElementById('modal').classList.remove('show'); }
 document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
-function badgeClass(status) {
-  return {'Approved':'badge-approved','Pending':'badge-pending','Returned':'badge-returned','Lost/Damaged':'badge-lost'}[status]||'badge-pending';
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg||'Saving…';
+  document.getElementById('loading-overlay').classList.add('show');
+}
+function hideLoading() { document.getElementById('loading-overlay').classList.remove('show'); }
+
+function badgeClass(s) {
+  return {'Approved':'badge-approved','Pending':'badge-pending','Returned':'badge-returned','Lost/Damaged':'badge-lost'}[s]||'badge-pending';
 }
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3500);
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500);
 }
 
 // ─── INIT ──────────────────────────────────────────────────────
-updateDashStats();
 setDateLimits();
 </script>
 </body>
