@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipment Borrowing & Monitoring System – Barangay Camp Tinio</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1a3a6b;
+  --navy-dark: #0f2347;
+  --navy-mid: #2558a8;
+  --gold: #c8a84b;
+  --green: #2e7d32;
+  --green-light: #43a047;
+  --red: #c62828;
+  --orange: #e65100;
+  --teal: #00838f;
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --text: #1a2a3a;
+  --text-muted: #556070;
+  --border: #d0dae8;
+  --approved: #1b5e20;
+  --approved-bg: #e8f5e9;
+  --pending-bg: #fff8e1;
+  --pending: #f57f17;
+  --returned-bg: #fff3e0;
+  --returned: #e65100;
+  --shadow: 0 2px 12px rgba(26,58,107,0.10);
+  --shadow-lg: 0 8px 32px rgba(26,58,107,0.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%); color: #fff; position: relative; overflow: hidden; }
+.header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+.header-top { display: flex; align-items: center; gap: 20px; padding: 18px 32px; position: relative; }
+.header-seal { width: 72px; height: 72px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; border: 3px solid var(--gold); box-shadow: 0 0 0 4px rgba(200,168,75,0.2); }
+.header-title h1 { font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 0.5px; line-height: 1.2; }
+.header-title p { font-size: 0.95rem; opacity: 0.8; margin-top: 2px; font-weight: 300; letter-spacing: 1px; }
+.header-mountain { position: absolute; bottom: 0; right: 0; width: 320px; opacity: 0.12; }
+
+nav { background: var(--navy-dark); display: flex; align-items: center; padding: 0 32px; border-top: 2px solid var(--gold); position: relative; z-index: 10; }
+nav button { background: none; border: none; color: #cdd8ea; font-family: 'Source Sans 3', sans-serif; font-size: 0.92rem; font-weight: 600; padding: 14px 20px; cursor: pointer; letter-spacing: 0.5px; border-bottom: 3px solid transparent; transition: all 0.2s; }
+nav button:hover { color: #fff; background: rgba(255,255,255,0.05); }
+nav button.active { color: #fff; border-bottom-color: var(--gold); }
+.nav-spacer { flex: 1; }
+.nav-admin-btn { background: rgba(200,168,75,0.15) !important; color: var(--gold) !important; border: 1px solid rgba(200,168,75,0.3) !important; border-radius: 4px !important; padding: 8px 16px !important; margin-left: 8px; }
+
+.page { display: none; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* HOME */
+.hero { background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%); padding: 40px 32px 36px; border-bottom: 1px solid var(--border); }
+.hero h2 { font-family: 'Merriweather', serif; font-size: 1.35rem; color: var(--navy); margin-bottom: 8px; }
+.hero h2 span { color: var(--navy-mid); }
+.hero p { color: var(--text-muted); font-size: 1rem; margin-bottom: 28px; }
+.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 6px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; letter-spacing: 0.3px; }
+.btn-green { background: var(--green-light); color: #fff; }
+.btn-green:hover { background: var(--green); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(46,125,50,0.3); }
+.btn-navy { background: var(--navy-mid); color: #fff; }
+.btn-navy:hover { background: var(--navy); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,58,107,0.3); }
+.btn-sm { padding: 8px 16px; font-size: 0.85rem; border-radius: 4px; }
+.btn-outline { background: none; border: 2px solid var(--border); color: var(--text-muted); }
+.btn-outline:hover { border-color: var(--navy-mid); color: var(--navy-mid); }
+
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 28px 32px; }
+@media (max-width: 700px) { .cards-grid { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border-radius: 10px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.card h3 { font-family: 'Merriweather', serif; font-size: 1.05rem; color: var(--navy-mid); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.inv-items { display: flex; gap: 16px; flex-wrap: wrap; }
+.inv-item { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--bg); border-radius: 8px; padding: 14px 20px; flex: 1; min-width: 80px; border: 1px solid var(--border); }
+.inv-item .icon { font-size: 2rem; }
+.inv-item .count { font-size: 1.5rem; font-weight: 700; color: var(--navy); font-family: 'Merriweather', serif; }
+.inv-item .label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.guide-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.guide-list li { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text); }
+.guide-list li::before { content: '✓'; color: var(--green-light); font-weight: 700; font-size: 1rem; width: 20px; flex-shrink: 0; }
+
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--bg); color: var(--text-muted); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.93rem; }
+tr:hover td { background: #f5f8fc; }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-approved { background: var(--approved-bg); color: var(--approved); }
+.badge-pending { background: var(--pending-bg); color: var(--pending); }
+.badge-returned { background: var(--returned-bg); color: var(--returned); }
+.badge-lost { background: #fce4ec; color: #b71c1c; }
+.badge-available { background: #e8f5e9; color: #1b5e20; }
+.badge-low { background: #fff8e1; color: #e65100; }
+.badge-out { background: #fce4ec; color: #b71c1c; }
+
+.req-id { color: var(--navy-mid); font-weight: 700; }
+.link-btn { background: none; border: none; color: var(--navy-mid); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: background 0.15s; }
+.link-btn:hover { background: #e8edf5; }
+
+/* CENTERED PAGES */
+.centered-page { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+
+/* BORROW FORM */
+.form-card { background: var(--surface); border-radius: 12px; padding: 36px 40px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); width: 100%; max-width: 620px; }
+.form-card h2 { font-family: 'Merriweather', serif; font-size: 1.3rem; color: var(--navy); margin-bottom: 8px; }
+.form-card .form-desc { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 0.87rem; font-weight: 700; color: var(--navy); margin-bottom: 6px; letter-spacing: 0.3px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 0.95rem; color: var(--text); background: var(--bg); transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--navy-mid); box-shadow: 0 0 0 3px rgba(37,88,168,0.1); background: #fff; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+.form-submit { margin-top: 8px; }
+.form-submit .btn { width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem; }
+.success-msg { display: none; background: var(--approved-bg); color: var(--approved); border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 16px; margin-top: 16px; font-weight: 600; text-align: center; }
+.success-msg.show { display: block; animation: fadeIn 0.3s ease; }
+
+/* INVENTORY PAGE */
+.inventory-centered { min-height: calc(100vh - 200px); display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; }
+.inventory-inner { width: 100%; max-width: 820px; }
+.inv-page-card { background: var(--surface); border-radius: 12px; padding: 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); margin-bottom: 24px; }
+.inv-page-card h2 { font-family: 'Merriweather', serif; font-size: 1.25rem; color: var(--navy); margin-bottom: 8px; }
+.inv-page-card .form-desc { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+
+.inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+@media (max-width: 600px) { .inv-grid { grid-template-columns: 1fr; } }
+
+.inv-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 16px; text-align: center; transition: box-shadow 0.2s; }
+.inv-card:hover { box-shadow: var(--shadow); }
+.inv-card .ic-icon { font-size: 2.4rem; margin-bottom: 8px; }
+.inv-card .ic-name { font-family: 'Merriweather', serif; font-size: 0.95rem; color: var(--navy); font-weight: 700; margin-bottom: 12px; }
+.inv-card .ic-rows { display: flex; flex-direction: column; gap: 6px; }
+.inv-card .ic-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+.ic-row .ic-lbl { color: var(--text-muted); }
+.ic-row .ic-val { font-weight: 700; color: var(--text); }
+.ic-row .ic-val.green { color: var(--green-light); }
+.ic-row .ic-val.orange { color: var(--orange); }
+.ic-row .ic-val.red { color: var(--red); }
+.ic-divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+.ic-avail-big { font-family: 'Merriweather', serif; font-size: 2rem; font-weight: 900; color: var(--navy); }
+.ic-avail-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.avail-bar-wrap { margin-top: 10px; }
+.avail-bar-bg { background: var(--border); border-radius: 100px; height: 6px; overflow: hidden; }
+.avail-bar-fill { height: 100%; border-radius: 100px; transition: width 0.4s; }
+
+.search-box { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+.search-box input { flex: 1; border: 1.5px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 0.95rem; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.2s; }
+.search-box input:focus { border-color: var(--navy-mid); background: #fff; }
+.search-box button { background: var(--navy-mid); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-family: 'Source Sans 3', sans-serif; font-size: 0.93rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.search-box button:hover { background: var(--navy); }
+
+.inv-detail-result { display: none; background: var(--approved-bg); border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 18px 20px; margin-top: 4px; }
+.inv-detail-result.show { display: block; animation: fadeIn 0.3s ease; }
+.inv-detail-result h4 { color: var(--approved); font-family: 'Merriweather', serif; font-size: 1rem; margin-bottom: 10px; }
+.inv-detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+.inv-detail-row:last-child { border-bottom: none; }
+.inv-detail-row .dl { color: #2e5e30; }
+.inv-detail-row .dv { font-weight: 700; color: #1b5e20; }
+
+/* LOGIN */
+.login-page { max-width: 400px; margin: 0 auto; width: 100%; }
+.login-card { background: var(--surface); border-radius: 12px; padding: 40px 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); text-align: center; }
+.login-card h2 { font-family: 'Merriweather', serif; font-size: 1.4rem; color: var(--navy); margin-bottom: 8px; }
+.login-card .login-desc { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 28px; }
+.login-card .form-group { text-align: left; }
+.login-error { display: none; background: #fce4ec; color: #b71c1c; border: 1.5px solid #f48fb1; border-radius: 6px; padding: 12px; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; }
+.login-error.show { display: block; }
+
+/* ADMIN */
+.admin-nav { background: var(--navy-dark); display: flex; align-items: center; padding: 0 24px; overflow-x: auto; flex-wrap: nowrap; }
+.admin-nav button { background: none; border: none; color: #9bb3d0; font-family: 'Source Sans 3', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 12px 14px; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+.admin-nav button:hover { color: #fff; }
+.admin-nav button.active { color: #fff; border-bottom-color: var(--gold); }
+.admin-nav-spacer { flex: 1; min-width: 16px; }
+.admin-user { color: #9bb3d0; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.admin-content { padding: 28px 32px; }
+@media (max-width: 700px) { .admin-content { padding: 16px; } }
+
+.stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+@media (max-width: 900px) { .stat-cards { grid-template-columns: repeat(2, 1fr); } }
+.stat-card { border-radius: 10px; padding: 20px; color: #fff; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); position: relative; overflow: hidden; cursor: pointer; transition: transform 0.15s; }
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card::after { content: ''; position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.1); }
+.stat-card .sc-icon { font-size: 1.8rem; }
+.stat-card .sc-num { font-family: 'Merriweather', serif; font-size: 2rem; font-weight: 900; }
+.stat-card .sc-label { font-size: 0.82rem; opacity: 0.85; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.sc-blue { background: linear-gradient(135deg, #1565c0, #1976d2); }
+.sc-green { background: linear-gradient(135deg, #2e7d32, #388e3c); }
+.sc-orange { background: linear-gradient(135deg, #e65100, #f57c00); }
+.sc-red { background: linear-gradient(135deg, #b71c1c, #c62828); }
+
+.admin-grid { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+@media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-header h3 { font-family: 'Merriweather', serif; font-size: 1rem; color: var(--navy); }
+
+.quick-actions { display: flex; flex-direction: column; gap: 10px; }
+.qa-btn { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-family: 'Source Sans 3', sans-serif; font-size: 0.93rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+.qa-green { background: var(--green-light); color: #fff; }
+.qa-green:hover { background: var(--green); }
+.qa-blue { background: var(--navy-mid); color: #fff; }
+.qa-blue:hover { background: var(--navy); }
+.qa-teal { background: var(--teal); color: #fff; }
+.qa-teal:hover { background: #006064; }
+.qa-orange { background: var(--orange); color: #fff; }
+.qa-orange:hover { background: #bf360c; }
+
+.inv-table .available { color: var(--green-light); font-weight: 700; }
+.inv-table .in-use { color: var(--navy-mid); font-weight: 700; }
+.inv-table .lost { color: var(--red); font-weight: 700; }
+
+.btn-approve { background: var(--green-light); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-approve:hover { background: var(--green); }
+.btn-return { background: var(--orange); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-return:hover { background: #bf360c; }
+.btn-edit { background: var(--navy-mid); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-edit:hover { background: var(--navy); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: fadeIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-family: 'Merriweather', serif; font-size: 1.15rem; color: var(--navy); margin-bottom: 8px; }
+.modal p { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #8b0000; }
+
+/* SMS notice box */
+.sms-notice { background: #e3f2fd; border: 1.5px solid #90caf9; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.88rem; color: #0d47a1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sms-notice a { color: #0d47a1; font-weight: 700; }
+
+/* Lost/Damaged check in return modal */
+.lost-check-group { background: #fff3e0; border: 1.5px solid #ffcc02; border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+.lost-check-group label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 700; color: #bf360c; cursor: pointer; }
+.lost-check-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
+.lost-detail { display: none; margin-top: 12px; }
+.lost-detail.show { display: block; }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy-dark); color: #fff; padding: 14px 24px; border-radius: 8px; font-size: 0.93rem; font-weight: 600; z-index: 2000; display: none; box-shadow: var(--shadow-lg); border-left: 4px solid var(--gold); }
+.toast.show { display: block; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+footer { background: var(--navy-dark); color: #8899aa; font-size: 0.82rem; text-align: center; padding: 16px 32px; margin-top: 40px; }
+footer span { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-top">
+    <div class="header-seal">🏛️</div>
+    <div class="header-title">
+      <h1>EQUIPMENT BORROWING AND MONITORING SYSTEM</h1>
+      <p>Barangay Camp Tinio</p>
+    </div>
+  </div>
+  <svg class="header-mountain" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" fill="white">
+    <path d="M0,80 L80,20 L140,50 L200,5 L260,45 L320,25 L400,60 L400,80 Z"/>
+  </svg>
+</header>
+
+<!-- PUBLIC NAV (Reports removed) -->
+<nav id="public-nav">
+  <button class="active" onclick="showPage('home', this)">Home</button>
+  <button onclick="showPage('borrow', this)">Request Equipment</button>
+  <button onclick="showPage('inventory', this)">Check Inventory</button>
+  <div class="nav-spacer"></div>
+  <button class="nav-admin-btn" onclick="showPage('login', this)">⚙ Admin</button>
+</nav>
+
+<!-- ADMIN NAV -->
+<nav id="admin-nav" style="display:none;">
+  <button class="active" onclick="showAdminPage('dashboard', this)">Home</button>
+  <button onclick="showAdminPage('a-pending', this)">Pending</button>
+  <button onclick="showAdminPage('a-approved', this)">Approved</button>
+  <button onclick="showAdminPage('a-returned', this)">Returned</button>
+  <button onclick="showAdminPage('a-lost', this)">Lost/Damaged</button>
+  <button onclick="showAdminPage('a-items', this)">Items</button>
+  <button onclick="showAdminPage('a-inventory', this)">Inventory</button>
+  <div class="nav-spacer"></div>
+  <span class="admin-user">👤 Admin ▾</span>
+  <button class="nav-admin-btn" onclick="logoutAdmin()" style="margin-left:12px;">🚪 Logout</button>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <h2>Welcome to <span>Barangay Camp Tinio</span> Equipment Borrowing System.</h2>
+    <p>Request and monitor equipment easily!</p>
+    <div class="hero-btns">
+      <button class="btn btn-green" onclick="navTo('borrow')">🪑 Borrow Equipment ›</button>
+      <button class="btn btn-navy" onclick="navTo('inventory')">📦 Check Inventory ›</button>
+    </div>
+  </div>
+  <div class="cards-grid">
+    <div class="card">
+      <h3>🏷️ Available Items</h3>
+      <div class="inv-items">
+        <div class="inv-item"><div class="icon">🪑</div><div class="count" id="pub-chairs">508</div><div class="label">Chairs</div></div>
+        <div class="inv-item"><div class="icon">⛺</div><div class="count" id="pub-tents">4</div><div class="label">Tents</div></div>
+        <div class="inv-item"><div class="icon">🪵</div><div class="count" id="pub-tables">12</div><div class="label">Tables</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📌 Guidelines</h3>
+      <ul class="guide-list">
+        <li>Valid ID Required</li>
+        <li>Specify Date &amp; Purpose</li>
+        <li>Return Items on Time</li>
+        <li>Report damaged items immediately</li>
+        <li>Items are for Barangay residents only</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="page" id="page-login">
+  <div class="centered-page">
+    <div class="login-page">
+      <div class="login-card">
+        <h2>🔐 Admin Login</h2>
+        <p class="login-desc">Enter your credentials to access the admin panel.</p>
+        <div class="login-error" id="login-error">Invalid username or password.</div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="login-user" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="Enter password" onkeypress="if(event.key==='Enter')attemptLogin()">
+        </div>
+        <div class="form-submit" style="margin-top:20px;">
+          <button class="btn btn-navy" style="width:100%;justify-content:center;" onclick="attemptLogin()">🔓 Login</button>
+        </div>
+        <p style="margin-top:20px;font-size:0.85rem;color:var(--text-muted);"><a href="#" onclick="showPage('home', document.querySelector('#public-nav button'))">← Back to Public Site</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BORROW FORM — centered & fit to screen -->
+<div class="page" id="page-borrow">
+  <div class="centered-page">
+    <div class="form-card">
+      <h2>🪑 Borrow Equipment</h2>
+      <p class="form-desc">Fill out the form below to submit an equipment borrowing request. All fields are required.</p>
+      <div class="form-grid">
+        <div class="form-group"><label>Full Name</label><input type="text" id="f-name" placeholder="Juan Dela Cruz"></div>
+        <div class="form-group"><label>Contact Number</label><input type="tel" id="f-contact" placeholder="09XX XXX XXXX"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Equipment Needed</label>
+          <select id="f-equipment">
+            <option value="">Select item</option>
+            <option>Monoblock Chairs</option>
+            <option>Collapsible Tents</option>
+            <option>Wooden Tables</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Quantity</label><input type="number" id="f-qty" placeholder="e.g. 10" min="1"></div>
+      </div>
+      <div class="form-group"><label>Purpose of Use</label><input type="text" id="f-purpose" placeholder="e.g. Birthday party, community event…"></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Date Needed</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label>Return Date</label><input type="date" id="f-return"></div>
+      </div>
+      <div class="form-group"><label>Valid ID Number</label><input type="text" id="f-id" placeholder="e.g. PWD ID, Voter's ID"></div>
+      <div class="form-submit">
+        <button class="btn btn-green" onclick="submitRequest()">✔ Submit Request</button>
+      </div>
+      <div class="success-msg" id="borrow-success">
+        ✅ Your request has been submitted! Your Request ID is <strong id="req-id-out"></strong>. You may check the inventory status under the "Check Inventory" page.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECK INVENTORY — centered & fit to screen -->
+<div class="page" id="page-inventory">
+  <div class="inventory-centered">
+    <div class="inventory-inner">
+
+      <div class="inv-page-card">
+        <h2>📦 Check Inventory</h2>
+        <p class="form-desc">See real-time availability of all barangay equipment. Search for a specific item or browse the full inventory below.</p>
+        <div class="search-box">
+          <input type="text" id="inv-search" placeholder="Search item (e.g. Chairs, Tents, Tables…)" oninput="searchInventory()">
+          <button onclick="searchInventory()">🔍 Search</button>
+        </div>
+        <div class="inv-detail-result" id="inv-search-result"></div>
+      </div>
+
+      <div class="inv-page-card">
+        <h2 style="font-size:1.05rem;margin-bottom:16px;">All Equipment</h2>
+        <div class="inv-grid" id="inv-cards-grid"></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--green-light);"></span> Available
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--navy-mid);"></span> In Use
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--red);"></span> Lost/Damaged
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:1rem;color:var(--navy);margin-bottom:14px;">📄 All Borrowing Requests</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Needed</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="pub-inv-requests-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Dashboard</h2>
+    <div class="stat-cards">
+      <div class="stat-card sc-blue" onclick="showAdminPage('a-pending', document.querySelector('#admin-nav button:nth-child(2)'))">
+        <div class="sc-icon">📋</div><div class="sc-num" id="dash-pending">5</div><div class="sc-label">Pending Requests</div>
+      </div>
+      <div class="stat-card sc-green" onclick="showAdminPage('a-approved', document.querySelector('#admin-nav button:nth-child(3)'))">
+        <div class="sc-icon">✅</div><div class="sc-num" id="dash-approved">20</div><div class="sc-label">Approved Requests</div>
+      </div>
+      <div class="stat-card sc-orange" onclick="showAdminPage('a-returned', document.querySelector('#admin-nav button:nth-child(4)'))">
+        <div class="sc-icon">📦</div><div class="sc-num" id="dash-returned">12</div><div class="sc-label">Returned Items</div>
+      </div>
+      <div class="stat-card sc-red" onclick="showAdminPage('a-lost', document.querySelector('#admin-nav button:nth-child(5)'))">
+        <div class="sc-icon">⚠️</div><div class="sc-num" id="dash-lost">4</div><div class="sc-label">Lost/Damaged</div>
+      </div>
+    </div>
+    <div class="admin-grid">
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>Equipment Inventory</h3></div>
+          <div class="inv-items">
+            <div class="inv-item"><div class="icon">🪑</div><div class="count">520</div><div class="label">Chairs</div></div>
+            <div class="inv-item"><div class="icon">⛺</div><div class="count">6</div><div class="label">Tents</div></div>
+            <div class="inv-item"><div class="icon">🪵</div><div class="count">16</div><div class="label">Tables</div></div>
+            <div class="inv-item"><div class="icon">⚠️</div><div class="count">7</div><div class="label">Lost/Dmgd</div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header"><h3>Recent Requests</h3></div>
+          <table>
+            <thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="dash-recent-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div class="quick-actions">
+            <button class="qa-btn qa-green" onclick="showAdminPage('a-pending', null)">➕ View Pending</button>
+            <button class="qa-btn qa-blue" onclick="showAdminPage('a-items', null)">⚙ Manage Items</button>
+            <button class="qa-btn qa-teal" onclick="showAdminPage('a-inventory', null)">📦 Inventory</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN: PENDING -->
+<div class="page" id="page-a-pending">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Pending Requests</h2>
+    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Needed</th><th>Purpose</th><th>Status</th><th>Actions</th></tr></thead><tbody id="pending-table"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ADMIN: APPROVED -->
+<div class="page" id="page-a-approved">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Approved Requests</h2>
+    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Needed</th><th>Return Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="approved-table"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ADMIN: RETURNED -->
+<div class="page" id="page-a-returned">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Returned Items</h2>
+    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Item</th><th>Qty</th><th>Date Returned</th><th>Status</th><th>Notes</th></tr></thead><tbody id="returned-table"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ADMIN: LOST/DAMAGED -->
+<div class="page" id="page-a-lost">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Lost / Damaged Items</h2>
+    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Contact</th><th>Item</th><th>Qty</th><th>Date Reported</th><th>Status</th><th>Notes</th></tr></thead><tbody id="lost-table"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ADMIN: ITEMS -->
+<div class="page" id="page-a-items">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Manage Items</h2>
+    <div class="card">
+      <div class="card-header"><h3>Equipment List</h3><button class="btn btn-green btn-sm" onclick="showAddItem()">+ Add Item</button></div>
+      <table class="inv-table"><thead><tr><th>Item</th><th>Total</th><th>Available</th><th>In Use</th><th>Lost/Damaged</th><th>Actions</th></tr></thead><tbody id="items-table"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN: INVENTORY -->
+<div class="page" id="page-a-inventory">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Inventory Overview</h2>
+    <div class="admin-grid">
+      <div class="card">
+        <div class="card-header"><h3>Current Stock</h3></div>
+        <table class="inv-table"><thead><tr><th>Item</th><th>Available</th><th>In Use</th><th>Lost/Dmgd</th><th>Actions</th></tr></thead><tbody id="inventory-table"></tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Summary</h3></div>
+        <div class="inv-items" style="flex-direction:column;">
+          <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;"><div class="label">Total Chairs</div><div class="count" style="font-size:1.2rem;">520</div></div>
+          <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;"><div class="label">Total Tents</div><div class="count" style="font-size:1.2rem;">6</div></div>
+          <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;"><div class="label">Total Tables</div><div class="count" style="font-size:1.2rem;">16</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Edit Item</h3>
+    <p id="modal-body">Update item details below.</p>
+    <div id="modal-form"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green btn-sm" id="modal-confirm" onclick="closeModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>&copy; 2026 <span>Barangay Camp Tinio</span> &mdash; Equipment Borrowing and Monitoring System. All rights reserved.</footer>
+
+<script>
+// ─── CREDENTIALS ───────────────────────────────────────────────
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'admin123';
+let isLoggedIn = false;
+
+// ─── DATA ──────────────────────────────────────────────────────
+let requests = [
+  { id:'REQ-102', name:'Juan Dela Cruz',   contact:'09171234567', item:'Monoblock Chairs',  qty:20, purpose:'Birthday party',         dateNeeded:'2025-04-15', returnDate:'2025-04-16', idNum:'VID-001', status:'Approved',      lostNote:'', returnedNote:'' },
+  { id:'REQ-101', name:'Maria Santos',     contact:'09281234567', item:'Collapsible Tents', qty:2,  purpose:'Community event',         dateNeeded:'2025-04-20', returnDate:'2025-04-21', idNum:'VID-002', status:'Approved',      lostNote:'', returnedNote:'' },
+  { id:'REQ-100', name:'Maria De Cruz',    contact:'09391234567', item:'Monoblock Chairs',  qty:15, purpose:'Graduation celebration',  dateNeeded:'2025-04-10', returnDate:'2025-04-11', idNum:'VID-003', status:'Returned',      lostNote:'', returnedNote:'All complete' },
+  { id:'REQ-99',  name:'Pedro Reyes',      contact:'09501234567', item:'Wooden Tables',     qty:3,  purpose:'Fiesta',                  dateNeeded:'2025-04-05', returnDate:'2025-04-06', idNum:'VID-004', status:'Pending',       lostNote:'', returnedNote:'' },
+  { id:'REQ-98',  name:'Ana Garcia',       contact:'09611234567', item:'Monoblock Chairs',  qty:10, purpose:'Wedding',                 dateNeeded:'2025-04-20', returnDate:'2025-04-21', idNum:'VID-005', status:'Pending',       lostNote:'', returnedNote:'' },
+  { id:'REQ-97',  name:'Carlos Bautista',  contact:'09721234567', item:'Collapsible Tents', qty:1,  purpose:'Company outing',          dateNeeded:'2025-04-10', returnDate:'2025-04-11', idNum:'VID-006', status:'Lost/Damaged',  lostNote:'1 tent pole missing', returnedNote:'' },
+  { id:'REQ-96',  name:'Maria De Cruz',    contact:'09391234567', item:'Monoblock Chairs',  qty:8,  purpose:'Community meeting',       dateNeeded:'2025-04-10', returnDate:'2025-04-11', idNum:'VID-003', status:'Pending',       lostNote:'', returnedNote:'' },
+];
+
+let items = [
+  { name:'Monoblock Chairs',  icon:'🪑', total:520, inUse:12, lost:4 },
+  { name:'Collapsible Tents', icon:'⛺', total:6,   inUse:2,  lost:2 },
+  { name:'Wooden Tables',     icon:'🪵', total:16,  inUse:4,  lost:1 },
+];
+
+let reqCounter = 103;
+const allPages = ['home','borrow','inventory','login','dashboard','a-pending','a-approved','a-returned','a-lost','a-items','a-inventory'];
+
+// ─── DATE HELPERS ──────────────────────────────────────────────
+function getMonthBounds() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const firstDay = new Date(y, m, 1);
+  const lastDay  = new Date(y, m + 1, 0);
+  const fmt = d => d.toISOString().split('T')[0];
+  return { min: fmt(firstDay), max: fmt(lastDay) };
+}
+
+function setDateLimits() {
+  const { min, max } = getMonthBounds();
+  ['f-date','f-return'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.min = min; el.max = max; }
+  });
+}
+
+// ─── AUTH ──────────────────────────────────────────────────────
+function attemptLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errorEl = document.getElementById('login-error');
+  if(user === ADMIN_USER && pass === ADMIN_PASS) {
+    isLoggedIn = true;
+    errorEl.classList.remove('show');
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    showAdmin();
+    showToast('✅ Welcome, Admin!');
+  } else {
+    errorEl.classList.add('show');
+  }
+}
+
+function logoutAdmin() {
+  isLoggedIn = false;
+  showPublic();
+  showToast('👋 Logged out successfully.');
+}
+
+// ─── NAVIGATION ────────────────────────────────────────────────
+function showPage(id, btn) {
+  allPages.forEach(p => { const el = document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
+  const target = document.getElementById('page-'+id);
+  if(target) target.classList.add('active');
+  if(btn) { document.querySelectorAll('#public-nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+  if(id==='inventory') renderInventoryPage();
+  if(id==='borrow') setDateLimits();
+  if(id==='login') document.getElementById('login-error').classList.remove('show');
+}
+
+function showAdminPage(id, btn) {
+  allPages.forEach(p => { const el = document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
+  const target = document.getElementById('page-'+id);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('#admin-nav button').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderAdminPage(id);
+}
+
+function navTo(id) {
+  showPage(id, null);
+  document.querySelectorAll('#public-nav button').forEach(b => {
+    b.classList.remove('active');
+    if(id==='inventory' && b.textContent.includes('Inventory')) b.classList.add('active');
+    if(id==='borrow' && b.textContent.includes('Request')) b.classList.add('active');
+  });
+}
+
+function showAdmin() {
+  document.getElementById('public-nav').style.display = 'none';
+  document.getElementById('admin-nav').style.display = 'flex';
+  showAdminPage('dashboard', document.querySelector('#admin-nav button'));
+}
+
+function showPublic() {
+  document.getElementById('admin-nav').style.display = 'none';
+  document.getElementById('public-nav').style.display = 'flex';
+  showPage('home', document.querySelector('#public-nav button'));
+}
+
+// ─── SUBMIT REQUEST ────────────────────────────────────────────
+function submitRequest() {
+  const name      = document.getElementById('f-name').value.trim();
+  const contact   = document.getElementById('f-contact').value.trim();
+  const equipment = document.getElementById('f-equipment').value;
+  const qty       = document.getElementById('f-qty').value;
+  const purpose   = document.getElementById('f-purpose').value.trim();
+  const date      = document.getElementById('f-date').value;
+  const ret       = document.getElementById('f-return').value;
+  const idNum     = document.getElementById('f-id').value.trim();
+  if(!name||!contact||!equipment||!qty||!purpose||!date||!ret||!idNum) { showToast('⚠️ Please fill in all fields.'); return; }
+  const newId = 'REQ-'+reqCounter++;
+  requests.unshift({ id:newId, name, contact, item:equipment, qty:parseInt(qty), purpose, dateNeeded:date, returnDate:ret, idNum, status:'Pending', lostNote:'', returnedNote:'' });
+  document.getElementById('req-id-out').textContent = newId;
+  document.getElementById('borrow-success').classList.add('show');
+  ['f-name','f-contact','f-qty','f-purpose','f-date','f-return','f-id'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('f-equipment').value='';
+  updateDashStats();
+  showToast('✅ Request '+newId+' submitted!');
+}
+
+// ─── INVENTORY HELPERS ─────────────────────────────────────────
+function getAvailable(it) { return Math.max(0, it.total - it.inUse - it.lost); }
+
+function getAvailBadge(it) {
+  const avail = getAvailable(it);
+  const pct = avail / it.total;
+  if(avail===0) return '<span class="badge badge-out">Out of Stock</span>';
+  if(pct<=0.2)  return '<span class="badge badge-low">Low Stock</span>';
+  return '<span class="badge badge-available">Available</span>';
+}
+
+function getBarColor(it) {
+  const pct = getAvailable(it)/it.total;
+  if(pct<=0)   return 'var(--red)';
+  if(pct<=0.2) return 'var(--orange)';
+  return 'var(--green-light)';
+}
+
+// ─── PUBLIC INVENTORY PAGE ─────────────────────────────────────
+function renderInventoryPage() {
+  const grid = document.getElementById('inv-cards-grid');
+  if(!grid) return;
+  grid.innerHTML = items.map(it => {
+    const avail = getAvailable(it);
+    const pct   = Math.round((avail/it.total)*100);
+    return `
+      <div class="inv-card">
+        <div class="ic-icon">${it.icon}</div>
+        <div class="ic-name">${it.name}</div>
+        <div class="ic-avail-big">${avail}</div>
+        <div class="ic-avail-label">Available</div>
+        <div class="avail-bar-wrap" style="margin:8px 0;">
+          <div class="avail-bar-bg"><div class="avail-bar-fill" style="width:${pct}%;background:${getBarColor(it)};"></div></div>
+        </div>
+        <div style="margin-top:2px;">${getAvailBadge(it)}</div>
+        <hr class="ic-divider">
+        <div class="ic-rows">
+          <div class="ic-row"><span class="ic-lbl">Total</span><span class="ic-val">${it.total}</span></div>
+          <div class="ic-row"><span class="ic-lbl">In Use</span><span class="ic-val orange">${it.inUse}</span></div>
+          <div class="ic-row"><span class="ic-lbl">Lost/Damaged</span><span class="ic-val red">${it.lost}</span></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const tbody = document.getElementById('pub-inv-requests-table');
+  if(tbody) {
+    tbody.innerHTML = requests.map(r => `
+      <tr>
+        <td class="req-id">${r.id}</td>
+        <td>${r.name}</td>
+        <td>${r.item}</td>
+        <td>${r.qty}</td>
+        <td>${r.dateNeeded}</td>
+        <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
+        <td><button class="link-btn" onclick="viewDetail('${r.id}')">Details</button></td>
+      </tr>`).join('');
+  }
+  document.getElementById('inv-search').value='';
+  document.getElementById('inv-search-result').classList.remove('show');
+}
+
+function searchInventory() {
+  const q  = document.getElementById('inv-search').value.trim().toLowerCase();
+  const el = document.getElementById('inv-search-result');
+  if(!q) { el.classList.remove('show'); return; }
+  const found = items.find(it => it.name.toLowerCase().includes(q));
+  if(!found) {
+    el.classList.add('show');
+    el.style.background='#fce4ec'; el.style.borderColor='#f48fb1';
+    el.innerHTML = '<h4 style="color:#b71c1c;">❌ No item found matching "'+q+'".</h4>';
+    return;
+  }
+  el.style.background=''; el.style.borderColor='';
+  el.classList.add('show');
+  const avail = getAvailable(found);
+  const pct   = Math.round((avail/found.total)*100);
+  el.innerHTML = `
+    <h4>${found.icon} ${found.name} — Inventory Details</h4>
+    <div class="inv-detail-row"><span class="dl">Total Quantity</span><span class="dv">${found.total}</span></div>
+    <div class="inv-detail-row"><span class="dl">Currently Available</span><span class="dv">${avail} (${pct}%)</span></div>
+    <div class="inv-detail-row"><span class="dl">Currently In Use</span><span class="dv">${found.inUse}</span></div>
+    <div class="inv-detail-row"><span class="dl">Lost / Damaged</span><span class="dv">${found.lost}</span></div>
+    <div class="inv-detail-row"><span class="dl">Status</span><span class="dv">${avail===0?'❌ Out of Stock':avail<=found.total*0.2?'⚠️ Low Stock':'✅ In Stock'}</span></div>`;
+}
+
+// ─── DETAIL MODAL ──────────────────────────────────────────────
+function viewDetail(id) {
+  const r = requests.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('modal-title').textContent = 'Request Details – '+r.id;
+  document.getElementById('modal-body').textContent = '';
+  document.getElementById('modal-form').innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Borrower</span><span style="font-weight:600;">${r.name}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Contact</span><span style="font-weight:600;">${r.contact}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Item</span><span style="font-weight:600;">${r.item} (${r.qty})</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Purpose</span><span style="font-weight:600;">${r.purpose}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Date Needed</span><span style="font-weight:600;">${r.dateNeeded}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Return Date</span><span style="font-weight:600;">${r.returnDate}</span></div>
+    ${r.lostNote?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Lost/Dmgd Note</span><span style="font-weight:600;color:var(--red);">${r.lostNote}</span></div>`:''}
+    ${r.returnedNote?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;"><span style="color:var(--text-muted);">Return Note</span><span style="font-weight:600;">${r.returnedNote}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:0.93rem;"><span style="color:var(--text-muted);">Status</span><span style="font-weight:600;"><span class="badge ${badgeClass(r.status)}">${r.status}</span></span></div>`;
+  document.getElementById('modal-confirm').textContent = 'Close';
+  document.getElementById('modal-confirm').onclick = () => closeModal();
+  document.getElementById('modal').classList.add('show');
+}
+
+// ─── ADMIN RENDER ──────────────────────────────────────────────
+function renderAdminPage(id) {
+  if(id==='dashboard')   renderDashboard();
+  else if(id==='a-pending')  renderFilteredTable('pending-table','Pending',true);
+  else if(id==='a-approved') renderFilteredTable('approved-table','Approved',true);
+  else if(id==='a-returned') renderReturnedTable();
+  else if(id==='a-lost')     renderLostTable();
+  else if(id==='a-items')    renderItemsTable();
+  else if(id==='a-inventory') renderInventoryTable();
+}
+
+function renderDashboard() {
+  updateDashStats();
+  const tbody = document.getElementById('dash-recent-table');
+  tbody.innerHTML = requests.slice(0,5).map(r=>`
+    <tr>
+      <td class="req-id">${r.id}</td>
+      <td>${r.name}</td>
+      <td><strong>${r.item}</strong></td>
+      <td>${r.dateNeeded}</td>
+      <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
+      <td>
+        ${r.status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r.id}')">Approve</button> `:''}
+        ${r.status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r.id}')">Mark Return</button> `:''}
+        <button class="link-btn" onclick="viewDetail('${r.id}')">Details</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderFilteredTable(tbodyId, status, showActions) {
+  const filtered = requests.filter(r=>r.status===status);
+  const tbody = document.getElementById(tbodyId);
+  if(!tbody) return;
+  if(!filtered.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(r=>`
+    <tr>
+      <td class="req-id">${r.id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
+      ${status==='Approved'?`<td>${r.returnDate}</td>`:`<td>${r.purpose}</td>`}
+      <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
+      ${showActions?`<td>
+        ${status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r.id}');renderAdminPage('a-pending')">Approve</button> `:''}
+        ${status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r.id}');renderAdminPage('a-approved')">Mark Return</button> `:''}
+        <button class="link-btn" onclick="viewDetail('${r.id}')">Details</button>
+      </td>`:''}
+    </tr>`).join('');
+}
+
+function renderReturnedTable() {
+  const filtered = requests.filter(r=>r.status==='Returned');
+  const tbody = document.getElementById('returned-table');
+  if(!tbody) return;
+  if(!filtered.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(r=>`
+    <tr>
+      <td class="req-id">${r.id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
+      <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
+      <td style="font-size:0.85rem;color:var(--text-muted);">${r.returnedNote||'—'}</td>
+    </tr>`).join('');
+}
+
+function renderLostTable() {
+  const filtered = requests.filter(r=>r.status==='Lost/Damaged');
+  const tbody = document.getElementById('lost-table');
+  if(!tbody) return;
+  if(!filtered.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(r=>`
+    <tr>
+      <td class="req-id">${r.id}</td><td>${r.name}</td>
+      <td><a href="tel:${r.contact}" style="color:var(--navy-mid);font-weight:700;">${r.contact}</a></td>
+      <td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
+      <td><span class="badge badge-lost">Lost/Damaged</span></td>
+      <td style="font-size:0.85rem;color:var(--red);">${r.lostNote||'—'}</td>
+    </tr>`).join('');
+}
+
+function renderItemsTable() {
+  const tbody = document.getElementById('items-table');
+  if(!tbody) return;
+  tbody.innerHTML = items.map((it,i)=>`
+    <tr>
+      <td>${it.icon} ${it.name}</td><td>${it.total}</td>
+      <td class="available">${getAvailable(it)}</td>
+      <td class="in-use">${it.inUse}</td>
+      <td class="lost">${it.lost}</td>
+      <td><button class="btn-edit" onclick="editItem(${i})">Edit</button></td>
+    </tr>`).join('');
+}
+
+function renderInventoryTable() {
+  const tbody = document.getElementById('inventory-table');
+  if(!tbody) return;
+  tbody.innerHTML = items.map((it,i)=>`
+    <tr>
+      <td>${it.icon} ${it.name}</td>
+      <td class="available">${getAvailable(it)}</td>
+      <td class="in-use">${it.inUse}</td>
+      <td class="lost">${it.lost}</td>
+      <td><button class="btn-edit" onclick="editItem(${i})">Edit</button></td>
+    </tr>`).join('');
+}
+
+// ─── APPROVE REQUEST (with SMS trigger) ───────────────────────
+function approveReq(id) {
+  const r = requests.find(x=>x.id===id);
+  if(!r) return;
+
+  // Build SMS message
+  const smsText = encodeURIComponent(
+    `[Barangay Camp Tinio] Your equipment borrowing request ${r.id} for ${r.qty} ${r.item} has been APPROVED. ` +
+    `Date Needed: ${r.dateNeeded}. Please return by ${r.returnDate}. Thank you!`
+  );
+
+  document.getElementById('modal-title').textContent = 'Approve Request – '+r.id;
+  document.getElementById('modal-body').textContent = 'Confirm approval for: '+r.name+' ('+r.item+' x'+r.qty+')';
+  document.getElementById('modal-form').innerHTML = `
+    <div class="sms-notice">
+      📱 <span>Send SMS approval to <strong>${r.contact}</strong>:<br>
+      <a href="sms:${r.contact}?body=${smsText}" onclick="showToast('📨 SMS app opened for ${r.contact}')">
+        📤 Tap to open SMS for ${r.contact}
+      </a></span>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">
+      Clicking the SMS link will open your device's messaging app pre-filled with the approval message.
+    </p>`;
+  document.getElementById('modal-confirm').textContent = '✅ Confirm Approve';
+  document.getElementById('modal-confirm').onclick = () => {
+    r.status='Approved';
+    updateDashStats();
+    showToast('✅ '+id+' approved! SMS link provided for '+r.contact);
+    closeModal();
+    renderDashboard();
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+// ─── RETURN MODAL (with Lost/Damaged option) ──────────────────
+function openReturnModal(id) {
+  const r = requests.find(x=>x.id===id);
+  if(!r) return;
+
+  document.getElementById('modal-title').textContent = 'Mark as Returned – '+r.id;
+  document.getElementById('modal-body').textContent = r.name+' returning '+r.qty+' '+r.item;
+  document.getElementById('modal-form').innerHTML = `
+    <div class="form-group">
+      <label>Return Notes (optional)</label>
+      <input type="text" id="return-note-input" placeholder="e.g. All items complete, good condition">
+    </div>
+    <div class="lost-check-group">
+      <label>
+        <input type="checkbox" id="lost-check" onchange="toggleLostDetail()">
+        ⚠️ Some items are Lost or Damaged
+      </label>
+      <div class="lost-detail" id="lost-detail">
+        <div class="form-group" style="margin-top:10px;margin-bottom:0;">
+          <label style="color:var(--red);">Describe the Lost/Damaged Item(s)</label>
+          <input type="text" id="lost-note-input" placeholder="e.g. 2 chairs broken, 1 tent missing">
+        </div>
+        <div class="sms-notice" style="margin-top:10px;">
+          📱 <span>SMS borrower about damage at <strong>${r.contact}</strong>:<br>
+          <a href="sms:${r.contact}?body=${encodeURIComponent('[Barangay Camp Tinio] Your borrowing of '+r.item+' ('+r.id+') has been recorded with LOST/DAMAGED items. Please contact the barangay hall immediately. Thank you.')}"
+             onclick="showToast('📨 SMS app opened for ${r.contact}')">
+            📤 Tap to notify ${r.contact}
+          </a></span>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('modal-confirm').textContent = '📦 Confirm Return';
+  document.getElementById('modal-confirm').onclick = () => {
+    const hasLost = document.getElementById('lost-check').checked;
+    const returnNote = document.getElementById('return-note-input').value.trim();
+    const lostNote   = hasLost ? (document.getElementById('lost-note-input').value.trim() || 'Damage reported') : '';
+
+    if(hasLost) {
+      r.status = 'Lost/Damaged';
+      r.lostNote = lostNote;
+      r.returnedNote = returnNote;
+      showToast('⚠️ '+id+' marked as Lost/Damaged. Notify borrower at '+r.contact);
+    } else {
+      r.status = 'Returned';
+      r.returnedNote = returnNote || 'All items returned';
+      r.lostNote = '';
+      showToast('📦 '+id+' marked as Returned.');
+    }
+    updateDashStats();
+    closeModal();
+    renderDashboard();
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+function toggleLostDetail() {
+  const cb = document.getElementById('lost-check');
+  const detail = document.getElementById('lost-detail');
+  if(detail) detail.classList.toggle('show', cb.checked);
+}
+
+// ─── EDIT / ADD ITEMS ──────────────────────────────────────────
+function editItem(i) {
+  const it = items[i];
+  document.getElementById('modal-title').textContent = 'Edit: '+it.name;
+  document.getElementById('modal-body').textContent  = 'Update inventory numbers for this item.';
+  document.getElementById('modal-form').innerHTML = `
+    <div class="form-group"><label>Total Quantity</label><input type="number" id="edit-total" value="${it.total}" min="0"></div>
+    <div class="form-group"><label>In Use</label><input type="number" id="edit-inuse" value="${it.inUse}" min="0"></div>
+    <div class="form-group"><label>Lost/Damaged</label><input type="number" id="edit-lost" value="${it.lost}" min="0"></div>`;
+  document.getElementById('modal-confirm').textContent = 'Save Changes';
+  document.getElementById('modal-confirm').onclick = () => {
+    it.total = parseInt(document.getElementById('edit-total').value)||it.total;
+    it.inUse = parseInt(document.getElementById('edit-inuse').value)||0;
+    it.lost  = parseInt(document.getElementById('edit-lost').value)||0;
+    closeModal(); renderItemsTable(); renderInventoryTable(); updateDashStats();
+    showToast('✅ Item updated!');
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+function showAddItem() {
+  document.getElementById('modal-title').textContent = 'Add New Item';
+  document.getElementById('modal-body').textContent  = 'Enter details for the new equipment item.';
+  document.getElementById('modal-form').innerHTML = `
+    <div class="form-group"><label>Item Name</label><input type="text" id="add-name" placeholder="e.g. Sound System"></div>
+    <div class="form-group"><label>Total Quantity</label><input type="number" id="add-total" placeholder="0" min="0"></div>`;
+  document.getElementById('modal-confirm').textContent = 'Add Item';
+  document.getElementById('modal-confirm').onclick = () => {
+    const name  = document.getElementById('add-name').value.trim();
+    const total = parseInt(document.getElementById('add-total').value)||0;
+    if(!name) { showToast('⚠️ Please enter item name.'); return; }
+    items.push({ name, icon:'📦', total, inUse:0, lost:0 });
+    closeModal(); renderItemsTable(); showToast('✅ Item added: '+name);
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+// ─── DASHBOARD STATS ───────────────────────────────────────────
+function updateDashStats() {
+  document.getElementById('dash-pending').textContent  = requests.filter(r=>r.status==='Pending').length;
+  document.getElementById('dash-approved').textContent = requests.filter(r=>r.status==='Approved').length;
+  document.getElementById('dash-returned').textContent = requests.filter(r=>r.status==='Returned').length;
+  document.getElementById('dash-lost').textContent     = requests.filter(r=>r.status==='Lost/Damaged').length;
+
+  const sum = (statusArr, item) => requests.filter(r=>statusArr.includes(r.status)&&r.item===item).reduce((s,r)=>s+r.qty,0);
+  const chairItem = items.find(i=>i.name==='Monoblock Chairs');
+  const tentItem  = items.find(i=>i.name==='Collapsible Tents');
+  const tableItem = items.find(i=>i.name==='Wooden Tables');
+  if(chairItem) chairItem.inUse = sum(['Approved'],'Monoblock Chairs');
+  if(tentItem)  tentItem.inUse  = sum(['Approved'],'Collapsible Tents');
+  if(tableItem) tableItem.inUse = sum(['Approved'],'Wooden Tables');
+
+  const pc=document.getElementById('pub-chairs'), pt=document.getElementById('pub-tents'), ptb=document.getElementById('pub-tables');
+  if(pc&&chairItem) pc.textContent  = getAvailable(chairItem);
+  if(pt&&tentItem)  pt.textContent  = getAvailable(tentItem);
+  if(ptb&&tableItem) ptb.textContent = getAvailable(tableItem);
+}
+
+// ─── UTILITIES ─────────────────────────────────────────────────
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+function badgeClass(status) {
+  return {'Approved':'badge-approved','Pending':'badge-pending','Returned':'badge-returned','Lost/Damaged':'badge-lost'}[status]||'badge-pending';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ─── INIT ──────────────────────────────────────────────────────
+updateDashStats();
+setDateLimits();
+</script>
+</body>
+</html>
