@@ -1,20 +1,21 @@
+html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Equipment Borrowing & Monitoring System – Barangay Camp Tinio</title>
-<link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap)" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <!-- Firebase SDKs -->
 <script type="module">
-  import { initializeApp } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js)";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc }
-    from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js)";
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-    from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js)";
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  // ─── 🔥 FIREBASE CONFIG — Replace with your own project config ───
   const firebaseConfig = {
     apiKey: "AIzaSyAObpO8dltnKAeEdTdRzy89S8il311QDCY",
     authDomain: "barangay-system-c2de8.firebaseapp.com",
@@ -24,13 +25,11 @@
     appId: "1:590794764667:web:ef968fc79c7fec65a54dde",
     measurementId: "G-R3RDGSV19D"
   };
-  // ────────────────────────────────────────────────────────────────
 
   const app  = initializeApp(firebaseConfig);
   const db   = getFirestore(app);
   const auth = getAuth(app);
 
-  // Expose to global scope so non-module scripts can use them
   window.__db   = db;
   window.__auth = auth;
 
@@ -40,7 +39,6 @@
     signInWithEmailAndPassword, signOut, onAuthStateChanged
   };
 
-  // ─── AUTH STATE LISTENER ─────────────────────────────────────
   onAuthStateChanged(auth, user => {
     if (user) {
       window.__isLoggedIn = true;
@@ -51,7 +49,6 @@
     }
   });
 
-  // ─── SEED DEFAULT ITEMS if collection is empty ────────────────
   async function seedItems() {
     const snap = await getDocs(collection(db, 'items'));
     if (snap.empty) {
@@ -67,7 +64,6 @@
   }
   seedItems();
 
-  // ─── REAL-TIME LISTENERS ──────────────────────────────────────
   const reqQ = query(collection(db, 'requests'), orderBy('createdAt','desc'));
   onSnapshot(reqQ, snap => {
     window.__requests = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
@@ -79,9 +75,7 @@
     refreshAllViews();
   });
 
-  // ─── GLOBAL API ───────────────────────────────────────────────
   window.__firestore = {
-
     async addRequest(data) {
       return await addDoc(collection(db, 'requests'), {
         ...data,
@@ -91,23 +85,18 @@
         createdAt: serverTimestamp()
       });
     },
-
     async updateRequest(id, data) {
       return await updateDoc(doc(db, 'requests', id), data);
     },
-
     async updateItem(id, data) {
       return await updateDoc(doc(db, 'items', id), data);
     },
-
     async addItem(data) {
       return await addDoc(collection(db, 'items'), { ...data, inUse:0, lost:0 });
     },
-
     async login(email, password) {
       return await signInWithEmailAndPassword(auth, email, password);
     },
-
     async logout() {
       return await signOut(auth);
     }
@@ -144,15 +133,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-/* ── FIREBASE BANNER ── */
-.fb-banner { background: linear-gradient(90deg, #1a3a6b 0%, #ff6f00 100%); color:#fff; text-align:center; padding:6px 12px; font-size:0.78rem; font-weight:700; letter-spacing:0.5px; display:flex; align-items:center; justify-content:center; gap:8px; }
-.fb-banner .fb-dot { width:8px; height:8px; border-radius:50%; background:#ffca28; display:inline-block; animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);} }
-.fb-banner.offline { background:linear-gradient(90deg,#555,#888); }
-.fb-banner.offline .fb-dot { background:#ccc; animation:none; }
+/* ── FIREBASE BANNER — hidden by default ── */
+.fb-banner { display: none; }
 
 .header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%); color: #fff; position: relative; overflow: hidden; }
-.header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='[w3.org](http://www.w3.org/2000/svg)'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+.header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
 .header-top { display: flex; align-items: center; gap: 20px; padding: 18px 32px; position: relative; }
 .header-seal { width: 72px; height: 72px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; border: 3px solid var(--gold); box-shadow: 0 0 0 4px rgba(200,168,75,0.2); }
 .header-title h1 { font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 0.5px; line-height: 1.2; }
@@ -170,17 +155,33 @@ nav button.active { color: #fff; border-bottom-color: var(--gold); }
 .page.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* HOME - UPDATED FOR CENTERING */
-.hero { 
-  background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%); 
-  padding: 40px 32px 36px; 
-  border-bottom: 1px solid var(--border); 
-  text-align: center; 
+/* HOME */
+.hero {
+  background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%);
+  padding: 40px 32px 36px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
 }
 .hero h2 { font-family: 'Merriweather', serif; font-size: 1.35rem; color: var(--navy); margin-bottom: 8px; }
 .hero h2 span { color: var(--navy-mid); }
 .hero p { color: var(--text-muted); font-size: 1rem; margin-bottom: 28px; }
-.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+/* ── FIXED: Hero buttons fit screen ── */
+.hero-btns {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.hero-btns .btn {
+  flex: 1;
+  min-width: 200px;
+  justify-content: center;
+}
+
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 6px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; letter-spacing: 0.3px; }
 .btn-green { background: var(--green-light); color: #fff; }
 .btn-green:hover { background: var(--green); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(46,125,50,0.3); }
@@ -367,26 +368,14 @@ tr:hover td { background: #f5f8fc; }
 
 footer { background: var(--navy-dark); color: #8899aa; font-size: 0.82rem; text-align: center; padding: 16px 32px; margin-top: 40px; }
 footer span { color: var(--gold); }
-
-/* Firebase config setup screen */
-.setup-screen { padding:32px; max-width:700px; margin:0 auto; }
-.setup-screen h2 { font-family:'Merriweather',serif; color:var(--navy); font-size:1.3rem; margin-bottom:8px; }
-.setup-screen p { color:var(--text-muted); margin-bottom:20px; font-size:0.95rem; }
-.setup-steps { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
-.setup-step { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 20px; }
-.setup-step .step-num { background:var(--navy-mid); color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.82rem; font-weight:700; margin-right:8px; }
-.setup-step p { margin:6px 0 0 32px; font-size:0.88rem; color:var(--text-muted); }
-.code-block { background:#1e1e2e; color:#cdd6f4; border-radius:8px; padding:16px 20px; font-family:monospace; font-size:0.83rem; overflow-x:auto; margin:12px 0; }
-.code-block .key { color:#89b4fa; }
-.code-block .val { color:#a6e3a1; }
 </style>
 </head>
 <body>
 
-<!-- Firebase status banner -->
-<div class="fb-banner offline" id="fb-banner">
+<!-- Firebase status banner — hidden -->
+<div class="fb-banner" id="fb-banner">
   <span class="fb-dot"></span>
-  <span id="fb-status-text">🔥 Firebase — Not Connected &nbsp;|&nbsp; Configure your project below</span>
+  <span id="fb-status-text"></span>
 </div>
 
 <header class="header">
@@ -397,7 +386,7 @@ footer span { color: var(--gold); }
       <p>Barangay Camp Tinio &nbsp;•&nbsp; Powered by Firebase</p>
     </div>
   </div>
-  <svg class="header-mountain" viewBox="0 0 400 80" xmlns="[w3.org](http://www.w3.org/2000/svg)" fill="white">
+  <svg class="header-mountain" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" fill="white">
     <path d="M0,80 L80,20 L140,50 L200,5 L260,45 L320,25 L400,60 L400,80 Z"/>
   </svg>
 </header>
@@ -425,9 +414,7 @@ footer span { color: var(--gold); }
   <button class="nav-admin-btn" onclick="logoutAdmin()" style="margin-left:12px;">🚪 Logout</button>
 </nav>
 
-<!-- ═══════════════════════════════════════════════════
-     HOME PAGE
-═══════════════════════════════════════════════════ -->
+<!-- HOME PAGE -->
 <div class="page active" id="page-home">
   <div class="hero">
     <h2>Welcome to <span>Barangay Camp Tinio</span> Equipment Borrowing System.</h2>
@@ -459,9 +446,7 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     LOGIN PAGE
-═══════════════════════════════════════════════════ -->
+<!-- LOGIN PAGE -->
 <div class="page" id="page-login">
   <div class="centered-page">
     <div class="login-page">
@@ -495,9 +480,7 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     BORROW FORM
-═══════════════════════════════════════════════════ -->
+<!-- BORROW FORM -->
 <div class="page" id="page-borrow">
   <div class="centered-page">
     <div class="form-card">
@@ -535,9 +518,7 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     CHECK INVENTORY
-═══════════════════════════════════════════════════ -->
+<!-- CHECK INVENTORY -->
 <div class="page" id="page-inventory">
   <div class="inventory-centered">
     <div class="inventory-inner">
@@ -578,9 +559,7 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     ADMIN DASHBOARD
-═══════════════════════════════════════════════════ -->
+<!-- ADMIN DASHBOARD -->
 <div class="page" id="page-dashboard">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Dashboard</h2>
@@ -626,7 +605,7 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- ADMIN PAGES (Pending / Approved / Returned / Lost / Items / Inventory) -->
+<!-- ADMIN PAGES -->
 <div class="page" id="page-a-pending">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Pending Requests</h2>
@@ -700,31 +679,12 @@ footer span { color: var(--gold); }
 <footer>&copy; 2026 <span>Barangay Camp Tinio</span> &mdash; Equipment Borrowing and Monitoring System. Powered by Firebase Firestore.</footer>
 
 <script>
-// ─── GLOBAL STATE (populated by Firestore real-time listeners) ──
 window.__requests = [];
 window.__items    = [];
 window.__isLoggedIn = false;
 
 const allPages = ['home','borrow','inventory','login','dashboard','a-pending','a-approved','a-returned','a-lost','a-items','a-inventory'];
 
-// ─── FIREBASE STATUS CHECK ─────────────────────────────────────
-// Poll until __fb is ready, then mark as connected
-(function waitForFirebase() {
-  let attempts = 0;
-  const check = setInterval(() => {
-    attempts++;
-    if (window.__fb) {
-      document.getElementById('fb-banner').classList.remove('offline');
-      document.getElementById('fb-status-text').textContent = '🔥 Firebase Connected — Real-time Firestore & Auth Active';
-      clearInterval(check);
-    } else if (attempts > 30) {
-      document.getElementById('fb-status-text').textContent = '⚠️ Firebase SDK failed to load — Check your config';
-      clearInterval(check);
-    }
-  }, 200);
-})();
-
-// ─── REFRESH ALL VISIBLE VIEWS ─────────────────────────────────
 function refreshAllViews() {
   updateHomeCounters();
   const activePage = document.querySelector('.page.active');
@@ -740,7 +700,6 @@ function refreshAllViews() {
   if (id === 'a-inventory') renderInventoryTable();
 }
 
-// ─── DATE HELPERS ──────────────────────────────────────────────
 function getMonthBounds() {
   const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
   const fmt = d => d.toISOString().split('T')[0];
@@ -751,7 +710,6 @@ function setDateLimits() {
   ['f-date','f-return'].forEach(id => { const el = document.getElementById(id); if(el){el.min=min;el.max=max;} });
 }
 
-// ─── AUTH ──────────────────────────────────────────────────────
 async function attemptLogin() {
   const email = document.getElementById('login-user').value.trim();
   const pass  = document.getElementById('login-pass').value;
@@ -761,7 +719,6 @@ async function attemptLogin() {
   showLoading('Authenticating with Firebase…');
   try {
     await window.__firestore.login(email, pass);
-    // onAuthStateChanged will call showAdmin()
     document.getElementById('login-user').value='';
     document.getElementById('login-pass').value='';
     const emailLabel = document.getElementById('admin-email-display');
@@ -787,7 +744,6 @@ async function logoutAdmin() {
   }
 }
 
-// ─── NAVIGATION ────────────────────────────────────────────────
 function showPage(id, btn) {
   allPages.forEach(p => { const el=document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
   const target = document.getElementById('page-'+id);
@@ -828,7 +784,6 @@ function showPublic() {
   showPage('home', document.querySelector('#public-nav button'));
 }
 
-// ─── SUBMIT REQUEST → FIRESTORE ────────────────────────────────
 async function submitRequest() {
   const name      = document.getElementById('f-name').value.trim();
   const contact   = document.getElementById('f-contact').value.trim();
@@ -843,7 +798,6 @@ async function submitRequest() {
   try {
     const docRef = await window.__firestore.addRequest({ name, contact, item:equipment, qty:parseInt(qty), purpose, dateNeeded:date, returnDate:ret, idNum });
     const shortId = 'REQ-'+docRef.id.slice(-6).toUpperCase();
-    // Store display ID back onto the doc
     await window.__firestore.updateRequest(docRef.id, { displayId: shortId });
     document.getElementById('req-id-out').textContent = shortId;
     document.getElementById('borrow-success').classList.add('show');
@@ -857,7 +811,6 @@ async function submitRequest() {
   }
 }
 
-// ─── INVENTORY HELPERS ─────────────────────────────────────────
 function getAvailable(it) { return Math.max(0, (it.total||0) - (it.inUse||0) - (it.lost||0)); }
 function getAvailBadge(it) {
   const avail=getAvailable(it); const pct=avail/(it.total||1);
@@ -872,7 +825,6 @@ function getBarColor(it) {
   return 'var(--green-light)';
 }
 
-// ─── HOME COUNTERS ─────────────────────────────────────────────
 function updateHomeCounters() {
   const chair = window.__items.find(i=>i.name==='Monoblock Chairs');
   const tent  = window.__items.find(i=>i.name==='Collapsible Tents');
@@ -883,7 +835,6 @@ function updateHomeCounters() {
   if(ptb&&table) ptb.textContent = getAvailable(table);
 }
 
-// ─── PUBLIC INVENTORY PAGE ─────────────────────────────────────
 function renderInventoryPage() {
   const grid = document.getElementById('inv-cards-grid');
   if(!grid) return;
@@ -942,7 +893,6 @@ function searchInventory() {
     <div class="inv-detail-row"><span class="dl">Status</span><span class="dv">${avail===0?'❌ Out of Stock':avail<=(found.total||1)*0.2?'⚠️ Low Stock':'✅ In Stock'}</span></div>`;
 }
 
-// ─── DETAIL MODAL ──────────────────────────────────────────────
 function viewDetail(id) {
   const r = window.__requests.find(x=>x._id===id);
   if(!r) return;
@@ -963,7 +913,6 @@ function viewDetail(id) {
   document.getElementById('modal').classList.add('show');
 }
 
-// ─── ADMIN RENDER ──────────────────────────────────────────────
 function renderAdminPage(id) {
   if(id==='dashboard')    renderDashboard();
   else if(id==='a-pending')  renderFilteredTable('pending-table','Pending',true);
@@ -980,8 +929,6 @@ function renderDashboard() {
   document.getElementById('dash-approved').textContent = reqs.filter(r=>r.status==='Approved').length;
   document.getElementById('dash-returned').textContent = reqs.filter(r=>r.status==='Returned').length;
   document.getElementById('dash-lost').textContent     = reqs.filter(r=>r.status==='Lost/Damaged').length;
-
-  // Dash inventory items
   const invEl = document.getElementById('dash-inv-items');
   if(invEl) invEl.innerHTML = window.__items.map(it=>`
     <div class="inv-item">
@@ -989,7 +936,6 @@ function renderDashboard() {
       <div class="count">${getAvailable(it)}</div>
       <div class="label">${it.name.split(' ')[0]}</div>
     </div>`).join('');
-
   const tbody = document.getElementById('dash-recent-table');
   tbody.innerHTML = reqs.slice(0,5).map(r=>`
     <tr>
@@ -1070,7 +1016,6 @@ function renderInventoryTable() {
     </div>`).join('');
 }
 
-// ─── APPROVE REQUEST → FIRESTORE ──────────────────────────────
 function approveReq(id) {
   const r = window.__requests.find(x=>x._id===id);
   if(!r) return;
@@ -1085,7 +1030,6 @@ function approveReq(id) {
     showLoading('Updating Firebase…');
     try {
       await window.__firestore.updateRequest(id, { status:'Approved' });
-      // Update inUse count on corresponding item
       const itemDoc = window.__items.find(i=>i.name===r.item);
       if(itemDoc) await window.__firestore.updateItem(itemDoc._id, { inUse: (itemDoc.inUse||0)+r.qty });
       showToast('✅ '+(r.displayId||id)+' approved & saved to Firebase!');
@@ -1095,7 +1039,6 @@ function approveReq(id) {
   document.getElementById('modal').classList.add('show');
 }
 
-// ─── RETURN MODAL → FIRESTORE ─────────────────────────────────
 function openReturnModal(id) {
   const r = window.__requests.find(x=>x._id===id);
   if(!r) return;
@@ -1127,7 +1070,6 @@ function openReturnModal(id) {
     try {
       const newStatus = hasLost?'Lost/Damaged':'Returned';
       await window.__firestore.updateRequest(id, { status:newStatus, returnedNote:retNote||'All items returned', lostNote });
-      // Release inUse count on corresponding item
       const itemDoc = window.__items.find(i=>i.name===r.item);
       if(itemDoc) {
         const newInUse = Math.max(0,(itemDoc.inUse||0)-r.qty);
@@ -1146,7 +1088,6 @@ function toggleLostDetail() {
   if(d) d.classList.toggle('show',cb.checked);
 }
 
-// ─── EDIT / ADD ITEMS → FIRESTORE ─────────────────────────────
 function editItem(itemId) {
   const it = window.__items.find(i=>i._id===itemId);
   if(!it) return;
@@ -1195,7 +1136,6 @@ function showAddItem() {
   document.getElementById('modal').classList.add('show');
 }
 
-// ─── UTILITIES ─────────────────────────────────────────────────
 function closeModal() { document.getElementById('modal').classList.remove('show'); }
 document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
@@ -1214,7 +1154,6 @@ function showToast(msg) {
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500);
 }
 
-// ─── INIT ──────────────────────────────────────────────────────
 setDateLimits();
 </script>
 </body>
