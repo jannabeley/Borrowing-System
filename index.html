@@ -80,6 +80,7 @@
         status: 'Pending',
         lostNote: '',
         returnedNote: '',
+        rejectionReason: '',
         createdAt: serverTimestamp()
       });
     },
@@ -125,13 +126,14 @@
   --pending: #f57f17;
   --returned-bg: #fff3e0;
   --returned: #e65100;
+  --rejected-bg: #fce4ec;
+  --rejected: #b71c1c;
   --shadow: 0 2px 12px rgba(26,58,107,0.10);
   --shadow-lg: 0 8px 32px rgba(26,58,107,0.15);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-/* ── FIREBASE BANNER — hidden by default ── */
 .fb-banner { display: none; }
 
 .header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%); color: #fff; position: relative; overflow: hidden; }
@@ -153,32 +155,12 @@ nav button.active { color: #fff; border-bottom-color: var(--gold); }
 .page.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* HOME */
-.hero {
-  background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%);
-  padding: 40px 32px 36px;
-  border-bottom: 1px solid var(--border);
-  text-align: center;
-}
+.hero { background: linear-gradient(135deg, #e8edf5 0%, #dce6f0 100%); padding: 40px 32px 36px; border-bottom: 1px solid var(--border); text-align: center; }
 .hero h2 { font-family: 'Merriweather', serif; font-size: 1.35rem; color: var(--navy); margin-bottom: 8px; }
 .hero h2 span { color: var(--navy-mid); }
 .hero p { color: var(--text-muted); font-size: 1rem; margin-bottom: 28px; }
-
-/* ── FIXED: Hero buttons fit screen ── */
-.hero-btns {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-}
-.hero-btns .btn {
-  flex: 1;
-  min-width: 200px;
-  justify-content: center;
-}
+.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px; margin: 0 auto; }
+.hero-btns .btn { flex: 1; min-width: 200px; justify-content: center; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 6px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; letter-spacing: 0.3px; }
 .btn-green { background: var(--green-light); color: #fff; }
@@ -214,6 +196,7 @@ tr:hover td { background: #f5f8fc; }
 .badge-pending { background: var(--pending-bg); color: var(--pending); }
 .badge-returned { background: var(--returned-bg); color: var(--returned); }
 .badge-lost { background: #fce4ec; color: #b71c1c; }
+.badge-rejected { background: var(--rejected-bg); color: var(--rejected); }
 .badge-available { background: #e8f5e9; color: #1b5e20; }
 .badge-low { background: #fff8e1; color: #e65100; }
 .badge-out { background: #fce4ec; color: #b71c1c; }
@@ -224,7 +207,6 @@ tr:hover td { background: #f5f8fc; }
 
 .centered-page { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
 
-/* BORROW FORM */
 .form-card { background: var(--surface); border-radius: 12px; padding: 36px 40px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); width: 100%; max-width: 620px; }
 .form-card h2 { font-family: 'Merriweather', serif; font-size: 1.3rem; color: var(--navy); margin-bottom: 8px; }
 .form-card .form-desc { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -239,7 +221,6 @@ tr:hover td { background: #f5f8fc; }
 .success-msg { display: none; background: var(--approved-bg); color: var(--approved); border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 16px; margin-top: 16px; font-weight: 600; text-align: center; }
 .success-msg.show { display: block; animation: fadeIn 0.3s ease; }
 
-/* INVENTORY PAGE */
 .inventory-centered { min-height: calc(100vh - 200px); display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; }
 .inventory-inner { width: 100%; max-width: 820px; }
 .inv-page-card { background: var(--surface); border-radius: 12px; padding: 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); margin-bottom: 24px; }
@@ -277,7 +258,6 @@ tr:hover td { background: #f5f8fc; }
 .inv-detail-row .dl { color: #2e5e30; }
 .inv-detail-row .dv { font-weight: 700; color: #1b5e20; }
 
-/* LOGIN */
 .login-page { max-width: 420px; margin: 0 auto; width: 100%; }
 .login-card { background: var(--surface); border-radius: 12px; padding: 40px 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); text-align: center; }
 .login-card h2 { font-family: 'Merriweather', serif; font-size: 1.4rem; color: var(--navy); margin-bottom: 8px; }
@@ -288,7 +268,6 @@ tr:hover td { background: #f5f8fc; }
 .login-note { background: #e3f2fd; border: 1.5px solid #90caf9; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 0.82rem; color: #0d47a1; text-align: left; }
 .login-note strong { display: block; margin-bottom: 4px; }
 
-/* ADMIN */
 .admin-nav { background: var(--navy-dark); display: flex; align-items: center; padding: 0 24px; overflow-x: auto; flex-wrap: nowrap; }
 .admin-nav button { background: none; border: none; color: #9bb3d0; font-family: 'Source Sans 3', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 12px 14px; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
 .admin-nav button:hover { color: #fff; }
@@ -329,14 +308,15 @@ tr:hover td { background: #f5f8fc; }
 .inv-table .in-use { color: var(--navy-mid); font-weight: 700; }
 .inv-table .lost { color: var(--red); font-weight: 700; }
 
-.btn-approve { background: var(--green-light); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-approve { background: var(--green-light); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 4px; }
 .btn-approve:hover { background: var(--green); }
-.btn-return { background: var(--orange); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-reject { background: var(--red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 4px; }
+.btn-reject:hover { background: #8b0000; }
+.btn-return { background: var(--orange); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 4px; }
 .btn-return:hover { background: #bf360c; }
 .btn-edit { background: var(--navy-mid); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
 .btn-edit:hover { background: var(--navy); }
 
-/* MODAL */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
 .modal-overlay.show { display: flex; }
 .modal { background: #fff; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: fadeIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
@@ -346,6 +326,9 @@ tr:hover td { background: #f5f8fc; }
 
 .sms-notice { background: #e3f2fd; border: 1.5px solid #90caf9; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.88rem; color: #0d47a1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .sms-notice a { color: #0d47a1; font-weight: 700; }
+
+.reject-notice { background: var(--rejected-bg); border: 1.5px solid #f48fb1; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.88rem; color: var(--rejected); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.reject-notice a { color: var(--rejected); font-weight: 700; }
 
 .lost-check-group { background: #fff3e0; border: 1.5px solid #ffcc02; border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
 .lost-check-group label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 700; color: #bf360c; cursor: pointer; }
@@ -357,7 +340,6 @@ tr:hover td { background: #f5f8fc; }
 .toast.show { display: block; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 
-/* LOADING OVERLAY */
 .loading-overlay { position: fixed; inset:0; background:rgba(15,35,71,0.85); z-index:3000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
 .loading-overlay.show { display:flex; }
 .spinner { width:44px; height:44px; border:4px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
@@ -370,11 +352,7 @@ footer span { color: var(--gold); }
 </head>
 <body>
 
-<!-- Firebase status banner — hidden -->
-<div class="fb-banner" id="fb-banner">
-  <span class="fb-dot"></span>
-  <span id="fb-status-text"></span>
-</div>
+<div class="fb-banner" id="fb-banner"></div>
 
 <header class="header">
   <div class="header-top">
@@ -405,6 +383,7 @@ footer span { color: var(--gold); }
   <button onclick="showAdminPage('a-approved', this)">Approved</button>
   <button onclick="showAdminPage('a-returned', this)">Returned</button>
   <button onclick="showAdminPage('a-lost', this)">Lost/Damaged</button>
+  <button onclick="showAdminPage('a-rejected', this)">Rejected</button>
   <button onclick="showAdminPage('a-items', this)">Items</button>
   <button onclick="showAdminPage('a-inventory', this)">Inventory</button>
   <div class="nav-spacer"></div>
@@ -502,8 +481,16 @@ footer span { color: var(--gold); }
       </div>
       <div class="form-group"><label>Purpose of Use</label><input type="text" id="f-purpose" placeholder="e.g. Birthday party, community event…"></div>
       <div class="form-grid">
-        <div class="form-group"><label>Date Needed</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label>Return Date</label><input type="date" id="f-return"></div>
+        <div class="form-group">
+          <label>Date Needed</label>
+          <!-- min is set to today in setDateLimits(); past dates are blocked -->
+          <input type="date" id="f-date" onchange="onBorrowDateChange()">
+        </div>
+        <div class="form-group">
+          <label>Return Date</label>
+          <!-- min is kept at least 1 day after f-date via onBorrowDateChange() -->
+          <input type="date" id="f-return">
+        </div>
       </div>
       <div class="form-group"><label>Valid ID Number</label><input type="text" id="f-id" placeholder="e.g. PWD ID, Voter's ID"></div>
       <div class="form-submit">
@@ -533,15 +520,9 @@ footer span { color: var(--gold); }
         <h2 style="font-size:1.05rem;margin-bottom:16px;">All Equipment</h2>
         <div class="inv-grid" id="inv-cards-grid"></div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;padding-top:16px;border-top:1px solid var(--border);">
-          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);">
-            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--green-light);"></span> Available
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);">
-            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--navy-mid);"></span> In Use
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);">
-            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--red);"></span> Lost/Damaged
-          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--green-light);"></span> Available</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--navy-mid);"></span> In Use</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--red);"></span> Lost/Damaged</div>
         </div>
       </div>
       <div class="card">
@@ -628,6 +609,13 @@ footer span { color: var(--gold); }
     <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Contact</th><th>Item</th><th>Qty</th><th>Date Reported</th><th>Status</th><th>Notes</th></tr></thead><tbody id="lost-table"></tbody></table></div>
   </div>
 </div>
+<!-- NEW: Rejected page -->
+<div class="page" id="page-a-rejected">
+  <div class="admin-content">
+    <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Rejected Requests</h2>
+    <div class="card"><table><thead><tr><th>Request ID</th><th>Borrower</th><th>Contact</th><th>Item</th><th>Qty</th><th>Date Needed</th><th>Status</th><th>Reason for Rejection</th></tr></thead><tbody id="rejected-table"></tbody></table></div>
+  </div>
+</div>
 <div class="page" id="page-a-items">
   <div class="admin-content">
     <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:20px;">Manage Items</h2>
@@ -666,7 +654,6 @@ footer span { color: var(--gold); }
   </div>
 </div>
 
-<!-- Loading overlay -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
   <div class="loading-text" id="loading-text">Saving to Firebase…</div>
@@ -677,87 +664,139 @@ footer span { color: var(--gold); }
 <footer>&copy; 2026 <span>Barangay Camp Tinio</span> &mdash; Equipment Borrowing and Monitoring System. Powered by Firebase Firestore.</footer>
 
 <script>
-window.__requests = [];
-window.__items    = [];
-window.__isLoggedIn = false;
+window.__requests    = [];
+window.__items       = [];
+window.__isLoggedIn  = false;
 
-const allPages = ['home','borrow','inventory','login','dashboard','a-pending','a-approved','a-returned','a-lost','a-items','a-inventory'];
+const allPages = [
+  'home','borrow','inventory','login',
+  'dashboard','a-pending','a-approved','a-returned','a-lost','a-rejected','a-items','a-inventory'
+];
+
+/* ═══════════════════════════════════════════
+   DATE HELPERS
+═══════════════════════════════════════════ */
+
+/** Returns today as YYYY-MM-DD in local time */
+function todayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Adds n days to a YYYY-MM-DD string, returns YYYY-MM-DD */
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');   // force local midnight
+  d.setDate(d.getDate() + n);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Called whenever the borrow date changes.
+ * Sets the return date's min to borrow date + 1 day.
+ * Clears the return date if it's now invalid.
+ */
+function onBorrowDateChange() {
+  const borrowEl  = document.getElementById('f-date');
+  const returnEl  = document.getElementById('f-return');
+  const borrowVal = borrowEl.value;
+
+  if (borrowVal) {
+    const minReturn = addDays(borrowVal, 1);
+    returnEl.min = minReturn;
+    // Reset return date if it's earlier than the new minimum
+    if (returnEl.value && returnEl.value <= borrowVal) {
+      returnEl.value = '';
+    }
+  } else {
+    returnEl.min = todayStr();
+  }
+}
+
+/** Initialises date fields when the borrow page is opened */
+function setDateLimits() {
+  const today    = todayStr();
+  const borrowEl = document.getElementById('f-date');
+  const returnEl = document.getElementById('f-return');
+  if (borrowEl) { borrowEl.min = today; borrowEl.value = ''; }
+  if (returnEl) { returnEl.min = today; returnEl.value = ''; }
+}
+
+/* ═══════════════════════════════════════════
+   REACTIVE REFRESH
+═══════════════════════════════════════════ */
 
 function refreshAllViews() {
   updateHomeCounters();
   const activePage = document.querySelector('.page.active');
   if (!activePage) return;
   const id = activePage.id.replace('page-', '');
-  if (id === 'inventory')  renderInventoryPage();
-  if (id === 'dashboard')  renderDashboard();
-  if (id === 'a-pending')  renderFilteredTable('pending-table','Pending',true);
-  if (id === 'a-approved') renderFilteredTable('approved-table','Approved',true);
-  if (id === 'a-returned') renderReturnedTable();
-  if (id === 'a-lost')     renderLostTable();
-  if (id === 'a-items')    renderItemsTable();
+  if (id === 'inventory')   renderInventoryPage();
+  if (id === 'dashboard')   renderDashboard();
+  if (id === 'a-pending')   renderFilteredTable('pending-table', 'Pending', true);
+  if (id === 'a-approved')  renderFilteredTable('approved-table', 'Approved', true);
+  if (id === 'a-returned')  renderReturnedTable();
+  if (id === 'a-lost')      renderLostTable();
+  if (id === 'a-rejected')  renderRejectedTable();
+  if (id === 'a-items')     renderItemsTable();
   if (id === 'a-inventory') renderInventoryTable();
 }
 
-function getMonthBounds() {
-  const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
-  const fmt = d => d.toISOString().split('T')[0];
-  return { min: fmt(new Date(y,m,1)), max: fmt(new Date(y,m+1,0)) };
-}
-function setDateLimits() {
-  const { min, max } = getMonthBounds();
-  ['f-date','f-return'].forEach(id => { const el = document.getElementById(id); if(el){el.min=min;el.max=max;} });
-}
+/* ═══════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════ */
 
 async function attemptLogin() {
-  const email = document.getElementById('login-user').value.trim();
-  const pass  = document.getElementById('login-pass').value;
+  const email   = document.getElementById('login-user').value.trim();
+  const pass    = document.getElementById('login-pass').value;
   const errorEl = document.getElementById('login-error');
   errorEl.classList.remove('show');
-  if (!email || !pass) { errorEl.textContent='Please enter email and password.'; errorEl.classList.add('show'); return; }
+  if (!email || !pass) { errorEl.textContent = 'Please enter email and password.'; errorEl.classList.add('show'); return; }
   showLoading('Authenticating with Firebase…');
   try {
     await window.__firestore.login(email, pass);
-    document.getElementById('login-user').value='';
-    document.getElementById('login-pass').value='';
-    const emailLabel = document.getElementById('admin-email-display');
-    if (emailLabel) emailLabel.textContent = '👤 '+email.split('@')[0];
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    const lbl = document.getElementById('admin-email-display');
+    if (lbl) lbl.textContent = '👤 ' + email.split('@')[0];
   } catch(e) {
-    errorEl.textContent = 'Login failed: '+(e.message || 'Invalid credentials.');
+    errorEl.textContent = 'Login failed: ' + (e.message || 'Invalid credentials.');
     errorEl.classList.add('show');
-  } finally {
-    hideLoading();
-  }
+  } finally { hideLoading(); }
 }
 
 async function logoutAdmin() {
   showLoading('Signing out…');
-  try {
-    await window.__firestore.logout();
-    showPublic();
-    showToast('👋 Logged out successfully.');
-  } catch(e) {
-    showToast('⚠️ Logout error: '+e.message);
-  } finally {
-    hideLoading();
-  }
+  try { await window.__firestore.logout(); showPublic(); showToast('👋 Logged out successfully.'); }
+  catch(e) { showToast('⚠️ Logout error: ' + e.message); }
+  finally { hideLoading(); }
 }
 
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+
 function showPage(id, btn) {
-  allPages.forEach(p => { const el=document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
-  const target = document.getElementById('page-'+id);
-  if(target) target.classList.add('active');
-  if(btn) { document.querySelectorAll('#public-nav button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-  if(id==='inventory') renderInventoryPage();
-  if(id==='borrow') { setDateLimits(); document.getElementById('borrow-success').classList.remove('show'); }
-  if(id==='login') document.getElementById('login-error').classList.remove('show');
+  allPages.forEach(p => { const el = document.getElementById('page-' + p); if (el) el.classList.remove('active'); });
+  const target = document.getElementById('page-' + id);
+  if (target) target.classList.add('active');
+  if (btn) { document.querySelectorAll('#public-nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+  if (id === 'inventory') renderInventoryPage();
+  if (id === 'borrow')    { setDateLimits(); document.getElementById('borrow-success').classList.remove('show'); }
+  if (id === 'login')     document.getElementById('login-error').classList.remove('show');
 }
 
 function showAdminPage(id, btn) {
-  allPages.forEach(p => { const el=document.getElementById('page-'+p); if(el) el.classList.remove('active'); });
-  const target = document.getElementById('page-'+id);
-  if(target) target.classList.add('active');
-  document.querySelectorAll('#admin-nav button').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+  allPages.forEach(p => { const el = document.getElementById('page-' + p); if (el) el.classList.remove('active'); });
+  const target = document.getElementById('page-' + id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('#admin-nav button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   renderAdminPage(id);
 }
 
@@ -765,22 +804,26 @@ function navTo(id) {
   showPage(id, null);
   document.querySelectorAll('#public-nav button').forEach(b => {
     b.classList.remove('active');
-    if(id==='inventory' && b.textContent.includes('Inventory')) b.classList.add('active');
-    if(id==='borrow' && b.textContent.includes('Request')) b.classList.add('active');
+    if (id === 'inventory' && b.textContent.includes('Inventory')) b.classList.add('active');
+    if (id === 'borrow'    && b.textContent.includes('Request'))   b.classList.add('active');
   });
 }
 
 function showAdmin() {
-  document.getElementById('public-nav').style.display='none';
-  document.getElementById('admin-nav').style.display='flex';
+  document.getElementById('public-nav').style.display = 'none';
+  document.getElementById('admin-nav').style.display  = 'flex';
   showAdminPage('dashboard', document.querySelector('#admin-nav button'));
 }
 
 function showPublic() {
-  document.getElementById('admin-nav').style.display='none';
-  document.getElementById('public-nav').style.display='flex';
+  document.getElementById('admin-nav').style.display  = 'none';
+  document.getElementById('public-nav').style.display = 'flex';
   showPage('home', document.querySelector('#public-nav button'));
 }
+
+/* ═══════════════════════════════════════════
+   BORROW FORM SUBMIT
+═══════════════════════════════════════════ */
 
 async function submitRequest() {
   const name      = document.getElementById('f-name').value.trim();
@@ -791,54 +834,58 @@ async function submitRequest() {
   const date      = document.getElementById('f-date').value;
   const ret       = document.getElementById('f-return').value;
   const idNum     = document.getElementById('f-id').value.trim();
-  if(!name||!contact||!equipment||!qty||!purpose||!date||!ret||!idNum) { showToast('⚠️ Please fill in all fields.'); return; }
+  if (!name||!contact||!equipment||!qty||!purpose||!date||!ret||!idNum) { showToast('⚠️ Please fill in all fields.'); return; }
   showLoading('Saving request to Firebase…');
   try {
     const docRef = await window.__firestore.addRequest({ name, contact, item:equipment, qty:parseInt(qty), purpose, dateNeeded:date, returnDate:ret, idNum });
-    const shortId = 'REQ-'+docRef.id.slice(-6).toUpperCase();
+    const shortId = 'REQ-' + docRef.id.slice(-6).toUpperCase();
     await window.__firestore.updateRequest(docRef.id, { displayId: shortId });
     document.getElementById('req-id-out').textContent = shortId;
     document.getElementById('borrow-success').classList.add('show');
-    ['f-name','f-contact','f-qty','f-purpose','f-date','f-return','f-id'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-equipment').value='';
-    showToast('✅ Request '+shortId+' saved to Firebase!');
-  } catch(e) {
-    showToast('❌ Error: '+(e.message||'Could not save request.'));
-  } finally {
-    hideLoading();
-  }
+    ['f-name','f-contact','f-qty','f-purpose','f-date','f-return','f-id'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-equipment').value = '';
+    showToast('✅ Request ' + shortId + ' saved to Firebase!');
+  } catch(e) { showToast('❌ Error: ' + (e.message||'Could not save request.')); }
+  finally { hideLoading(); }
 }
+
+/* ═══════════════════════════════════════════
+   INVENTORY HELPERS
+═══════════════════════════════════════════ */
 
 function getAvailable(it) { return Math.max(0, (it.total||0) - (it.inUse||0) - (it.lost||0)); }
 function getAvailBadge(it) {
-  const avail=getAvailable(it); const pct=avail/(it.total||1);
-  if(avail===0) return '<span class="badge badge-out">Out of Stock</span>';
-  if(pct<=0.2)  return '<span class="badge badge-low">Low Stock</span>';
+  const avail = getAvailable(it); const pct = avail / (it.total||1);
+  if (avail === 0) return '<span class="badge badge-out">Out of Stock</span>';
+  if (pct <= 0.2)  return '<span class="badge badge-low">Low Stock</span>';
   return '<span class="badge badge-available">Available</span>';
 }
 function getBarColor(it) {
-  const pct=getAvailable(it)/(it.total||1);
-  if(pct<=0)  return 'var(--red)';
-  if(pct<=0.2) return 'var(--orange)';
+  const pct = getAvailable(it) / (it.total||1);
+  if (pct <= 0)   return 'var(--red)';
+  if (pct <= 0.2) return 'var(--orange)';
   return 'var(--green-light)';
 }
 
 function updateHomeCounters() {
-  const chair = window.__items.find(i=>i.name==='Monoblock Chairs');
-  const tent  = window.__items.find(i=>i.name==='Collapsible Tents');
-  const table = window.__items.find(i=>i.name==='Wooden Tables');
+  const chair = window.__items.find(i => i.name === 'Monoblock Chairs');
+  const tent  = window.__items.find(i => i.name === 'Collapsible Tents');
+  const table = window.__items.find(i => i.name === 'Wooden Tables');
   const pc=document.getElementById('pub-chairs'), pt=document.getElementById('pub-tents'), ptb=document.getElementById('pub-tables');
-  if(pc&&chair)  pc.textContent  = getAvailable(chair);
-  if(pt&&tent)   pt.textContent  = getAvailable(tent);
-  if(ptb&&table) ptb.textContent = getAvailable(table);
+  if (pc && chair)  pc.textContent  = getAvailable(chair);
+  if (pt && tent)   pt.textContent  = getAvailable(tent);
+  if (ptb && table) ptb.textContent = getAvailable(table);
 }
+
+/* ═══════════════════════════════════════════
+   RENDER FUNCTIONS
+═══════════════════════════════════════════ */
 
 function renderInventoryPage() {
   const grid = document.getElementById('inv-cards-grid');
-  if(!grid) return;
-  const items = window.__items;
-  grid.innerHTML = items.length ? items.map(it => {
-    const avail=getAvailable(it); const pct=Math.round((avail/(it.total||1))*100);
+  if (!grid) return;
+  grid.innerHTML = window.__items.length ? window.__items.map(it => {
+    const avail = getAvailable(it); const pct = Math.round((avail/(it.total||1))*100);
     return `<div class="inv-card">
       <div class="ic-icon">${it.icon||'📦'}</div>
       <div class="ic-name">${it.name}</div>
@@ -858,9 +905,8 @@ function renderInventoryPage() {
   }).join('') : '<p style="color:var(--text-muted);padding:16px;">Loading inventory from Firebase…</p>';
 
   const tbody = document.getElementById('pub-inv-requests-table');
-  if(tbody) {
-    const reqs = window.__requests;
-    tbody.innerHTML = reqs.length ? reqs.map(r => `
+  if (tbody) {
+    tbody.innerHTML = window.__requests.length ? window.__requests.map(r => `
       <tr>
         <td class="req-id">${r.displayId||r._id}</td>
         <td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
@@ -868,22 +914,22 @@ function renderInventoryPage() {
         <td><button class="link-btn" onclick="viewDetail('${r._id}')">Details</button></td>
       </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No requests yet.</td></tr>';
   }
-  document.getElementById('inv-search').value='';
+  document.getElementById('inv-search').value = '';
   document.getElementById('inv-search-result').classList.remove('show');
 }
 
 function searchInventory() {
   const q  = document.getElementById('inv-search').value.trim().toLowerCase();
   const el = document.getElementById('inv-search-result');
-  if(!q) { el.classList.remove('show'); return; }
-  const found = window.__items.find(it=>it.name.toLowerCase().includes(q));
-  if(!found) {
+  if (!q) { el.classList.remove('show'); return; }
+  const found = window.__items.find(it => it.name.toLowerCase().includes(q));
+  if (!found) {
     el.classList.add('show'); el.style.background='#fce4ec'; el.style.borderColor='#f48fb1';
-    el.innerHTML='<h4 style="color:#b71c1c;">❌ No item found matching "'+q+'".</h4>'; return;
+    el.innerHTML = '<h4 style="color:#b71c1c;">❌ No item found matching "' + q + '".</h4>'; return;
   }
   el.style.background=''; el.style.borderColor=''; el.classList.add('show');
-  const avail=getAvailable(found); const pct=Math.round((avail/(found.total||1))*100);
-  el.innerHTML=`<h4>${found.icon||'📦'} ${found.name} — Inventory Details</h4>
+  const avail = getAvailable(found); const pct = Math.round((avail/(found.total||1))*100);
+  el.innerHTML = `<h4>${found.icon||'📦'} ${found.name} — Inventory Details</h4>
     <div class="inv-detail-row"><span class="dl">Total Quantity</span><span class="dv">${found.total}</span></div>
     <div class="inv-detail-row"><span class="dl">Currently Available</span><span class="dv">${avail} (${pct}%)</span></div>
     <div class="inv-detail-row"><span class="dl">Currently In Use</span><span class="dv">${found.inUse||0}</span></div>
@@ -892,157 +938,218 @@ function searchInventory() {
 }
 
 function viewDetail(id) {
-  const r = window.__requests.find(x=>x._id===id);
-  if(!r) return;
-  document.getElementById('modal-title').textContent='Request Details – '+(r.displayId||r._id);
-  document.getElementById('modal-body').textContent='';
+  const r = window.__requests.find(x => x._id === id);
+  if (!r) return;
+  document.getElementById('modal-title').textContent = 'Request Details – ' + (r.displayId||r._id);
+  document.getElementById('modal-body').textContent  = '';
   const rows = [
-    ['Borrower',r.name],['Contact',r.contact],['Item',r.item+' ('+r.qty+')'],
-    ['Purpose',r.purpose],['Date Needed',r.dateNeeded],['Return Date',r.returnDate],
-    ...(r.lostNote?[['Lost/Dmgd Note','<span style="color:var(--red);">'+r.lostNote+'</span>']]:[]),
-    ...(r.returnedNote?[['Return Note',r.returnedNote]]:[]),
-    ['Status','<span class="badge '+badgeClass(r.status)+'">'+r.status+'</span>'],
+    ['Borrower', r.name], ['Contact', r.contact], ['Item', r.item + ' (' + r.qty + ')'],
+    ['Purpose', r.purpose], ['Date Needed', r.dateNeeded], ['Return Date', r.returnDate],
+    ...(r.lostNote       ? [['Lost/Dmgd Note',   '<span style="color:var(--red);">'      + r.lostNote       + '</span>']] : []),
+    ...(r.returnedNote   ? [['Return Note',       r.returnedNote]]   : []),
+    ...(r.rejectionReason? [['Rejection Reason',  '<span style="color:var(--red);">'      + r.rejectionReason+ '</span>']] : []),
+    ['Status', '<span class="badge ' + badgeClass(r.status) + '">' + r.status + '</span>'],
   ];
-  document.getElementById('modal-form').innerHTML = rows.map(([l,v])=>
+  document.getElementById('modal-form').innerHTML = rows.map(([l,v]) =>
     `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.93rem;">
       <span style="color:var(--text-muted);">${l}</span><span style="font-weight:600;">${v}</span></div>`).join('');
-  document.getElementById('modal-confirm').textContent='Close';
-  document.getElementById('modal-confirm').onclick=()=>closeModal();
+  resetConfirmBtn('Close', () => closeModal());
   document.getElementById('modal').classList.add('show');
 }
 
 function renderAdminPage(id) {
-  if(id==='dashboard')    renderDashboard();
-  else if(id==='a-pending')  renderFilteredTable('pending-table','Pending',true);
-  else if(id==='a-approved') renderFilteredTable('approved-table','Approved',true);
-  else if(id==='a-returned') renderReturnedTable();
-  else if(id==='a-lost')     renderLostTable();
-  else if(id==='a-items')    renderItemsTable();
-  else if(id==='a-inventory') renderInventoryTable();
+  if      (id === 'dashboard')   renderDashboard();
+  else if (id === 'a-pending')   renderFilteredTable('pending-table', 'Pending', true);
+  else if (id === 'a-approved')  renderFilteredTable('approved-table', 'Approved', true);
+  else if (id === 'a-returned')  renderReturnedTable();
+  else if (id === 'a-lost')      renderLostTable();
+  else if (id === 'a-rejected')  renderRejectedTable();
+  else if (id === 'a-items')     renderItemsTable();
+  else if (id === 'a-inventory') renderInventoryTable();
 }
 
 function renderDashboard() {
   const reqs = window.__requests;
-  document.getElementById('dash-pending').textContent  = reqs.filter(r=>r.status==='Pending').length;
-  document.getElementById('dash-approved').textContent = reqs.filter(r=>r.status==='Approved').length;
-  document.getElementById('dash-returned').textContent = reqs.filter(r=>r.status==='Returned').length;
-  document.getElementById('dash-lost').textContent     = reqs.filter(r=>r.status==='Lost/Damaged').length;
+  document.getElementById('dash-pending').textContent  = reqs.filter(r => r.status === 'Pending').length;
+  document.getElementById('dash-approved').textContent = reqs.filter(r => r.status === 'Approved').length;
+  document.getElementById('dash-returned').textContent = reqs.filter(r => r.status === 'Returned').length;
+  document.getElementById('dash-lost').textContent     = reqs.filter(r => r.status === 'Lost/Damaged').length;
+
   const invEl = document.getElementById('dash-inv-items');
-  if(invEl) invEl.innerHTML = window.__items.map(it=>`
-    <div class="inv-item">
-      <div class="icon">${it.icon||'📦'}</div>
-      <div class="count">${getAvailable(it)}</div>
-      <div class="label">${it.name.split(' ')[0]}</div>
-    </div>`).join('');
+  if (invEl) invEl.innerHTML = window.__items.map(it =>
+    `<div class="inv-item"><div class="icon">${it.icon||'📦'}</div><div class="count">${getAvailable(it)}</div><div class="label">${it.name.split(' ')[0]}</div></div>`).join('');
+
   const tbody = document.getElementById('dash-recent-table');
-  tbody.innerHTML = reqs.slice(0,5).map(r=>`
+  tbody.innerHTML = reqs.slice(0,5).map(r => `
     <tr>
       <td class="req-id">${r.displayId||r._id}</td>
       <td>${r.name}</td><td><strong>${r.item}</strong></td><td>${r.dateNeeded}</td>
       <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
-      <td>
-        ${r.status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r._id}')">Approve</button> `:''}
-        ${r.status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r._id}')">Mark Return</button> `:''}
-        <button class="link-btn" onclick="viewDetail('${r._id}')">Details</button>
-      </td>
+      <td>${actionBtns(r)}</td>
     </tr>`).join('');
 }
 
+function actionBtns(r) {
+  let html = '';
+  if (r.status === 'Pending') {
+    html += `<button class="btn-approve" onclick="approveReq('${r._id}')">Approve</button>`;
+    html += `<button class="btn-reject"  onclick="rejectReq('${r._id}')">Reject</button> `;
+  }
+  if (r.status === 'Approved') {
+    html += `<button class="btn-return" onclick="openReturnModal('${r._id}')">Mark Return</button> `;
+  }
+  html += `<button class="link-btn" onclick="viewDetail('${r._id}')">Details</button>`;
+  return html;
+}
+
 function renderFilteredTable(tbodyId, status, showActions) {
-  const filtered = window.__requests.filter(r=>r.status===status);
+  const filtered = window.__requests.filter(r => r.status === status);
   const tbody = document.getElementById(tbodyId);
-  if(!tbody) return;
-  if(!filtered.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
-  tbody.innerHTML = filtered.map(r=>`
+  if (!tbody) return;
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(r => `
     <tr>
       <td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
-      ${status==='Approved'?`<td>${r.returnDate}</td>`:`<td>${r.purpose}</td>`}
+      ${status === 'Approved' ? `<td>${r.returnDate}</td>` : `<td>${r.purpose}</td>`}
       <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
-      ${showActions?`<td>
-        ${status==='Pending'?`<button class="btn-approve" onclick="approveReq('${r._id}')">Approve</button> `:''}
-        ${status==='Approved'?`<button class="btn-return" onclick="openReturnModal('${r._id}')">Mark Return</button> `:''}
-        <button class="link-btn" onclick="viewDetail('${r._id}')">Details</button>
-      </td>`:''}
+      ${showActions ? `<td>${actionBtns(r)}</td>` : ''}
     </tr>`).join('');
 }
 
 function renderReturnedTable() {
-  const filtered=window.__requests.filter(r=>r.status==='Returned');
-  const tbody=document.getElementById('returned-table'); if(!tbody) return;
-  tbody.innerHTML=filtered.length?filtered.map(r=>`
-    <tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
-    <td><span class="badge badge-returned">Returned</span></td>
-    <td style="font-size:0.85rem;color:var(--text-muted);">${r.returnedNote||'—'}</td></tr>`)
-    .join(''):'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
+  const filtered = window.__requests.filter(r => r.status === 'Returned');
+  const tbody = document.getElementById('returned-table'); if (!tbody) return;
+  tbody.innerHTML = filtered.length ? filtered.map(r =>
+    `<tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
+     <td><span class="badge badge-returned">Returned</span></td>
+     <td style="font-size:0.85rem;color:var(--text-muted);">${r.returnedNote||'—'}</td></tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
 }
 
 function renderLostTable() {
-  const filtered=window.__requests.filter(r=>r.status==='Lost/Damaged');
-  const tbody=document.getElementById('lost-table'); if(!tbody) return;
-  tbody.innerHTML=filtered.length?filtered.map(r=>`
-    <tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td>
-    <td><a href="tel:${r.contact}" style="color:var(--navy-mid);font-weight:700;">${r.contact}</a></td>
-    <td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
-    <td><span class="badge badge-lost">Lost/Damaged</span></td>
-    <td style="font-size:0.85rem;color:var(--red);">${r.lostNote||'—'}</td></tr>`)
-    .join(''):'<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
+  const filtered = window.__requests.filter(r => r.status === 'Lost/Damaged');
+  const tbody = document.getElementById('lost-table'); if (!tbody) return;
+  tbody.innerHTML = filtered.length ? filtered.map(r =>
+    `<tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td>
+     <td><a href="tel:${r.contact}" style="color:var(--navy-mid);font-weight:700;">${r.contact}</a></td>
+     <td>${r.item}</td><td>${r.qty}</td><td>${r.returnDate}</td>
+     <td><span class="badge badge-lost">Lost/Damaged</span></td>
+     <td style="font-size:0.85rem;color:var(--red);">${r.lostNote||'—'}</td></tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
+}
+
+function renderRejectedTable() {
+  const filtered = window.__requests.filter(r => r.status === 'Rejected');
+  const tbody = document.getElementById('rejected-table'); if (!tbody) return;
+  tbody.innerHTML = filtered.length ? filtered.map(r =>
+    `<tr><td class="req-id">${r.displayId||r._id}</td><td>${r.name}</td>
+     <td><a href="tel:${r.contact}" style="color:var(--navy-mid);font-weight:700;">${r.contact}</a></td>
+     <td>${r.item}</td><td>${r.qty}</td><td>${r.dateNeeded}</td>
+     <td><span class="badge badge-rejected">Rejected</span></td>
+     <td style="font-size:0.85rem;color:var(--red);">${r.rejectionReason||'—'}</td></tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
 }
 
 function renderItemsTable() {
-  const tbody=document.getElementById('items-table'); if(!tbody) return;
-  tbody.innerHTML=window.__items.map(it=>`
-    <tr><td>${it.icon||'📦'} ${it.name}</td><td>${it.total}</td>
-    <td class="available">${getAvailable(it)}</td>
-    <td class="in-use">${it.inUse||0}</td>
-    <td class="lost">${it.lost||0}</td>
-    <td><button class="btn-edit" onclick="editItem('${it._id}')">Edit</button></td></tr>`).join('');
+  const tbody = document.getElementById('items-table'); if (!tbody) return;
+  tbody.innerHTML = window.__items.map(it =>
+    `<tr><td>${it.icon||'📦'} ${it.name}</td><td>${it.total}</td>
+     <td class="available">${getAvailable(it)}</td>
+     <td class="in-use">${it.inUse||0}</td>
+     <td class="lost">${it.lost||0}</td>
+     <td><button class="btn-edit" onclick="editItem('${it._id}')">Edit</button></td></tr>`).join('');
 }
 
 function renderInventoryTable() {
-  const tbody=document.getElementById('inventory-table'); if(!tbody) return;
-  tbody.innerHTML=window.__items.map(it=>`
-    <tr><td>${it.icon||'📦'} ${it.name}</td>
-    <td class="available">${getAvailable(it)}</td>
-    <td class="in-use">${it.inUse||0}</td>
-    <td class="lost">${it.lost||0}</td>
-    <td><button class="btn-edit" onclick="editItem('${it._id}')">Edit</button></td></tr>`).join('');
-  const summEl=document.getElementById('inv-summary-items');
-  if(summEl) summEl.innerHTML=window.__items.map(it=>`
-    <div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;">
-      <div class="label">${it.name}</div>
-      <div class="count" style="font-size:1.2rem;">${it.total}</div>
-    </div>`).join('');
+  const tbody = document.getElementById('inventory-table'); if (!tbody) return;
+  tbody.innerHTML = window.__items.map(it =>
+    `<tr><td>${it.icon||'📦'} ${it.name}</td>
+     <td class="available">${getAvailable(it)}</td>
+     <td class="in-use">${it.inUse||0}</td>
+     <td class="lost">${it.lost||0}</td>
+     <td><button class="btn-edit" onclick="editItem('${it._id}')">Edit</button></td></tr>`).join('');
+  const summEl = document.getElementById('inv-summary-items');
+  if (summEl) summEl.innerHTML = window.__items.map(it =>
+    `<div class="inv-item" style="flex-direction:row;justify-content:space-between;width:100%;">
+       <div class="label">${it.name}</div>
+       <div class="count" style="font-size:1.2rem;">${it.total}</div>
+     </div>`).join('');
 }
 
+/* ═══════════════════════════════════════════
+   ADMIN ACTIONS
+═══════════════════════════════════════════ */
+
 function approveReq(id) {
-  const r = window.__requests.find(x=>x._id===id);
-  if(!r) return;
+  const r = window.__requests.find(x => x._id === id);
+  if (!r) return;
   const smsText = encodeURIComponent(`[Barangay Camp Tinio] Your request ${r.displayId||id} for ${r.qty} ${r.item} has been APPROVED. Date Needed: ${r.dateNeeded}. Return by: ${r.returnDate}. Thank you!`);
-  document.getElementById('modal-title').textContent='Approve Request – '+(r.displayId||id);
-  document.getElementById('modal-body').textContent='Confirm approval for: '+r.name+' ('+r.item+' x'+r.qty+')';
-  document.getElementById('modal-form').innerHTML=`
-    <div class="sms-notice">📱 <span>SMS borrower at <strong>${r.contact}</strong>:<br>
+  document.getElementById('modal-title').textContent = 'Approve Request – ' + (r.displayId||id);
+  document.getElementById('modal-body').textContent  = 'Confirm approval for: ' + r.name + ' (' + r.item + ' x' + r.qty + ')';
+  document.getElementById('modal-form').innerHTML    =
+    `<div class="sms-notice">📱 <span>SMS borrower at <strong>${r.contact}</strong>:<br>
       <a href="sms:${r.contact}?body=${smsText}" onclick="showToast('📨 SMS app opened')">📤 Tap to open SMS for ${r.contact}</a></span></div>`;
-  document.getElementById('modal-confirm').textContent='✅ Confirm Approve';
-  document.getElementById('modal-confirm').onclick = async () => {
+  resetConfirmBtn('✅ Confirm Approve', async () => {
     showLoading('Updating Firebase…');
     try {
       await window.__firestore.updateRequest(id, { status:'Approved' });
-      const itemDoc = window.__items.find(i=>i.name===r.item);
-      if(itemDoc) await window.__firestore.updateItem(itemDoc._id, { inUse: (itemDoc.inUse||0)+r.qty });
-      showToast('✅ '+(r.displayId||id)+' approved & saved to Firebase!');
-    } catch(e) { showToast('❌ Error: '+e.message); }
+      const itemDoc = window.__items.find(i => i.name === r.item);
+      if (itemDoc) await window.__firestore.updateItem(itemDoc._id, { inUse: (itemDoc.inUse||0) + r.qty });
+      showToast('✅ ' + (r.displayId||id) + ' approved & saved to Firebase!');
+    } catch(e) { showToast('❌ Error: ' + e.message); }
+    finally { hideLoading(); closeModal(); }
+  });
+  document.getElementById('modal').classList.add('show');
+}
+
+/* ─── NEW: REJECT REQUEST ─── */
+function rejectReq(id) {
+  const r = window.__requests.find(x => x._id === id);
+  if (!r) return;
+  const smsBody = encodeURIComponent(
+    `[Barangay Camp Tinio] We regret to inform you that your equipment request ` +
+    `(${r.displayId||id}) for ${r.qty} ${r.item} has been REJECTED. ` +
+    `Please contact the barangay hall for more information.`
+  );
+  document.getElementById('modal-title').textContent = '❌ Reject Request – ' + (r.displayId||id);
+  document.getElementById('modal-body').textContent  = `You are about to reject ${r.name}'s request for ${r.qty} ${r.item}.`;
+  document.getElementById('modal-form').innerHTML    = `
+    <div class="form-group">
+      <label style="color:var(--red);">Reason for Rejection <span style="color:var(--text-muted);font-weight:400;">(required)</span></label>
+      <textarea id="reject-reason-input" rows="3"
+        placeholder="e.g. Item unavailable on requested date, insufficient advance notice, outside barangay jurisdiction…"
+        style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px;font-family:inherit;font-size:0.95rem;resize:vertical;outline:none;"></textarea>
+    </div>
+    <div class="reject-notice">
+      📱 <span>Notify borrower at <strong>${r.contact}</strong>:<br>
+        <a href="sms:${r.contact}?body=${smsBody}" onclick="showToast('📨 SMS app opened')">📤 Tap to notify ${r.contact}</a>
+      </span>
+    </div>`;
+  // Red confirm button for destructive action
+  const confirmBtn = document.getElementById('modal-confirm');
+  confirmBtn.textContent          = '❌ Confirm Rejection';
+  confirmBtn.style.background     = 'var(--red)';
+  confirmBtn.style.color          = '#fff';
+  confirmBtn.style.borderColor    = 'var(--red)';
+  confirmBtn.onclick = async () => {
+    const reason = document.getElementById('reject-reason-input').value.trim();
+    if (!reason) { showToast('⚠️ Please enter a reason for rejection.'); return; }
+    showLoading('Updating Firebase…');
+    try {
+      await window.__firestore.updateRequest(id, { status:'Rejected', rejectionReason: reason });
+      showToast('❌ ' + (r.displayId||id) + ' rejected & saved to Firebase!');
+    } catch(e) { showToast('❌ Error: ' + e.message); }
     finally { hideLoading(); closeModal(); }
   };
   document.getElementById('modal').classList.add('show');
 }
 
 function openReturnModal(id) {
-  const r = window.__requests.find(x=>x._id===id);
-  if(!r) return;
-  document.getElementById('modal-title').textContent='Mark as Returned – '+(r.displayId||id);
-  document.getElementById('modal-body').textContent=r.name+' returning '+r.qty+' '+r.item;
-  document.getElementById('modal-form').innerHTML=`
+  const r = window.__requests.find(x => x._id === id);
+  if (!r) return;
+  document.getElementById('modal-title').textContent = 'Mark as Returned – ' + (r.displayId||id);
+  document.getElementById('modal-body').textContent  = r.name + ' returning ' + r.qty + ' ' + r.item;
+  document.getElementById('modal-form').innerHTML    = `
     <div class="form-group">
       <label>Return Notes (optional)</label>
       <input type="text" id="return-note-input" placeholder="e.g. All items complete, good condition">
@@ -1059,83 +1166,96 @@ function openReturnModal(id) {
              onclick="showToast('📨 SMS app opened')">📤 Tap to notify ${r.contact}</a></span></div>
       </div>
     </div>`;
-  document.getElementById('modal-confirm').textContent='📦 Confirm Return';
-  document.getElementById('modal-confirm').onclick = async () => {
-    const hasLost   = document.getElementById('lost-check').checked;
-    const retNote   = document.getElementById('return-note-input').value.trim();
-    const lostNote  = hasLost?(document.getElementById('lost-note-input').value.trim()||'Damage reported'):'';
+  resetConfirmBtn('📦 Confirm Return', async () => {
+    const hasLost  = document.getElementById('lost-check').checked;
+    const retNote  = document.getElementById('return-note-input').value.trim();
+    const lostNote = hasLost ? (document.getElementById('lost-note-input').value.trim()||'Damage reported') : '';
     showLoading('Updating Firebase…');
     try {
-      const newStatus = hasLost?'Lost/Damaged':'Returned';
+      const newStatus = hasLost ? 'Lost/Damaged' : 'Returned';
       await window.__firestore.updateRequest(id, { status:newStatus, returnedNote:retNote||'All items returned', lostNote });
-      const itemDoc = window.__items.find(i=>i.name===r.item);
-      if(itemDoc) {
-        const newInUse = Math.max(0,(itemDoc.inUse||0)-r.qty);
-        const newLost  = hasLost?(itemDoc.lost||0)+r.qty:(itemDoc.lost||0);
+      const itemDoc = window.__items.find(i => i.name === r.item);
+      if (itemDoc) {
+        const newInUse = Math.max(0, (itemDoc.inUse||0) - r.qty);
+        const newLost  = hasLost ? (itemDoc.lost||0) + r.qty : (itemDoc.lost||0);
         await window.__firestore.updateItem(itemDoc._id, { inUse:newInUse, lost:newLost });
       }
-      showToast(hasLost?'⚠️ Marked as Lost/Damaged & saved to Firebase!':'📦 Marked as Returned & saved to Firebase!');
-    } catch(e) { showToast('❌ Error: '+e.message); }
+      showToast(hasLost ? '⚠️ Marked as Lost/Damaged & saved to Firebase!' : '📦 Marked as Returned & saved to Firebase!');
+    } catch(e) { showToast('❌ Error: ' + e.message); }
     finally { hideLoading(); closeModal(); }
-  };
+  });
   document.getElementById('modal').classList.add('show');
 }
 
 function toggleLostDetail() {
-  const cb=document.getElementById('lost-check'); const d=document.getElementById('lost-detail');
-  if(d) d.classList.toggle('show',cb.checked);
+  const cb = document.getElementById('lost-check'); const d = document.getElementById('lost-detail');
+  if (d) d.classList.toggle('show', cb.checked);
 }
 
 function editItem(itemId) {
-  const it = window.__items.find(i=>i._id===itemId);
-  if(!it) return;
-  document.getElementById('modal-title').textContent='Edit: '+it.name;
-  document.getElementById('modal-body').textContent='Update inventory numbers. Changes saved to Firebase.';
-  document.getElementById('modal-form').innerHTML=`
+  const it = window.__items.find(i => i._id === itemId);
+  if (!it) return;
+  document.getElementById('modal-title').textContent = 'Edit: ' + it.name;
+  document.getElementById('modal-body').textContent  = 'Update inventory numbers. Changes saved to Firebase.';
+  document.getElementById('modal-form').innerHTML    = `
     <div class="form-group"><label>Total Quantity</label><input type="number" id="edit-total" value="${it.total}" min="0"></div>
     <div class="form-group"><label>In Use</label><input type="number" id="edit-inuse" value="${it.inUse||0}" min="0"></div>
     <div class="form-group"><label>Lost/Damaged</label><input type="number" id="edit-lost" value="${it.lost||0}" min="0"></div>`;
-  document.getElementById('modal-confirm').textContent='💾 Save to Firebase';
-  document.getElementById('modal-confirm').onclick = async () => {
+  resetConfirmBtn('💾 Save to Firebase', async () => {
     const total = parseInt(document.getElementById('edit-total').value)||0;
     const inUse = parseInt(document.getElementById('edit-inuse').value)||0;
     const lost  = parseInt(document.getElementById('edit-lost').value)||0;
     showLoading('Saving to Firebase…');
-    try {
-      await window.__firestore.updateItem(itemId, { total, inUse, lost });
-      showToast('✅ Item updated in Firebase!');
-    } catch(e) { showToast('❌ Error: '+e.message); }
+    try { await window.__firestore.updateItem(itemId, { total, inUse, lost }); showToast('✅ Item updated in Firebase!'); }
+    catch(e) { showToast('❌ Error: ' + e.message); }
     finally { hideLoading(); closeModal(); }
-  };
+  });
   document.getElementById('modal').classList.add('show');
 }
 
 function showAddItem() {
-  document.getElementById('modal-title').textContent='Add New Item';
-  document.getElementById('modal-body').textContent='New item will be saved to Firebase Firestore.';
-  document.getElementById('modal-form').innerHTML=`
+  document.getElementById('modal-title').textContent = 'Add New Item';
+  document.getElementById('modal-body').textContent  = 'New item will be saved to Firebase Firestore.';
+  document.getElementById('modal-form').innerHTML    = `
     <div class="form-group"><label>Item Name</label><input type="text" id="add-name" placeholder="e.g. Sound System"></div>
     <div class="form-group"><label>Icon (emoji)</label><input type="text" id="add-icon" placeholder="📦" maxlength="2" value="📦"></div>
     <div class="form-group"><label>Total Quantity</label><input type="number" id="add-total" placeholder="0" min="0"></div>`;
-  document.getElementById('modal-confirm').textContent='➕ Add to Firebase';
-  document.getElementById('modal-confirm').onclick = async () => {
+  resetConfirmBtn('➕ Add to Firebase', async () => {
     const name  = document.getElementById('add-name').value.trim();
     const icon  = document.getElementById('add-icon').value.trim()||'📦';
     const total = parseInt(document.getElementById('add-total').value)||0;
-    if(!name) { showToast('⚠️ Please enter item name.'); return; }
+    if (!name) { showToast('⚠️ Please enter item name.'); return; }
     showLoading('Adding item to Firebase…');
-    try {
-      await window.__firestore.addItem({ name, icon, total });
-      showToast('✅ Item added: '+name);
-      closeModal();
-    } catch(e) { showToast('❌ Error: '+e.message); }
+    try { await window.__firestore.addItem({ name, icon, total }); showToast('✅ Item added: ' + name); closeModal(); }
+    catch(e) { showToast('❌ Error: ' + e.message); }
     finally { hideLoading(); }
-  };
+  });
   document.getElementById('modal').classList.add('show');
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('show'); }
-document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+/* ═══════════════════════════════════════════
+   MODAL UTILS
+═══════════════════════════════════════════ */
+
+/** Resets confirm button to default green style, then applies label + handler */
+function resetConfirmBtn(label, handler) {
+  const btn = document.getElementById('modal-confirm');
+  btn.textContent       = label;
+  btn.style.background  = '';
+  btn.style.color       = '';
+  btn.style.borderColor = '';
+  btn.onclick           = handler;
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  resetConfirmBtn('Save', () => closeModal());
+}
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+/* ═══════════════════════════════════════════
+   LOADING / TOAST / BADGE
+═══════════════════════════════════════════ */
 
 function showLoading(msg) {
   document.getElementById('loading-text').textContent = msg||'Saving…';
@@ -1144,14 +1264,23 @@ function showLoading(msg) {
 function hideLoading() { document.getElementById('loading-overlay').classList.remove('show'); }
 
 function badgeClass(s) {
-  return {'Approved':'badge-approved','Pending':'badge-pending','Returned':'badge-returned','Lost/Damaged':'badge-lost'}[s]||'badge-pending';
+  return {
+    'Approved':    'badge-approved',
+    'Pending':     'badge-pending',
+    'Returned':    'badge-returned',
+    'Lost/Damaged':'badge-lost',
+    'Rejected':    'badge-rejected'
+  }[s] || 'badge-pending';
 }
 
 function showToast(msg) {
-  const t=document.getElementById('toast'); t.textContent=msg;
-  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+// ── Init ──
 setDateLimits();
 </script>
 </body>
