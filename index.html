@@ -245,12 +245,13 @@ tr:hover td{background:#f5f8fc;}
 .login-note strong{display:block;margin-bottom:4px;}
 
 /* ADMIN */
-.admin-nav{background:var(--navy-dark);display:flex;align-items:center;padding:0 24px;overflow-x:auto;flex-wrap:nowrap;}
+.admin-nav{background:var(--navy-dark);display:flex;align-items:center;padding:0 24px;overflow-x:auto;flex-wrap:nowrap;width:100%;}
 .admin-nav button{background:none;border:none;color:#9bb3d0;font-family:'Source Sans 3',sans-serif;font-size:0.85rem;font-weight:600;padding:12px 14px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all 0.2s;}
 .admin-nav button:hover{color:#fff;}
 .admin-nav button.active{color:#fff;border-bottom-color:var(--gold);}
 .admin-nav-spacer{flex:1;min-width:16px;}
 .admin-user{color:#9bb3d0;font-size:0.85rem;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.admin-logout-btn{background:rgba(200,168,75,0.15)!important;color:var(--gold)!important;border:1px solid rgba(200,168,75,0.3)!important;border-radius:4px!important;padding:8px 16px!important;margin-left:16px;flex-shrink:0;}
 .admin-content{padding:28px 32px;}
 @media(max-width:700px){.admin-content{padding:16px;}}
 .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
@@ -351,7 +352,7 @@ footer span{color:var(--gold);}
     <button onclick="showAdminPage('a-inventory',this)">Inventory</button>
     <div class="admin-nav-spacer"></div>
     <span class="admin-user" id="admin-email-display">👤 Admin</span>
-    <button class="nav-admin-btn" onclick="logoutAdmin()" style="margin-left:12px;">🚪 Logout</button>
+    <button class="admin-logout-btn" onclick="logoutAdmin()">🚪 Logout</button>
   </div>
 </nav>
 
